@@ -31,7 +31,7 @@ logic [7:0]    tkeep ;
 logic          tvalid, tlast ;
 wire           tready ;
 
-logic [7:0]    RamPtr ;
+logic [7:0]    RamPtr, RamPtrNxt ;
 logic          DataRamValid, ChangeRam ;
 logic [7:0]    lenMess ;
 
@@ -353,14 +353,14 @@ always_comb begin : proc_DataValid_RamValid_Signals
    endcase
 end
 always_comb begin : proc_RamValid
-   RamValid[0] = (RamPtr == 8'h0 && ObSt != IDLE ) ? (1'b0) : (1'b1) ;
-   RamValid[1] = (RamPtr == 8'h1 && ObSt != IDLE ) ? (1'b0) : (1'b1) ;
-   RamValid[2] = (RamPtr == 8'h2 && ObSt != IDLE ) ? (1'b0) : (1'b1) ;
-   RamValid[3] = (RamPtr == 8'h3 && ObSt != IDLE ) ? (1'b0) : (1'b1) ;
-   RamValid[4] = (RamPtr == 8'h4 && ObSt != IDLE ) ? (1'b0) : (1'b1) ;
-   RamValid[5] = (RamPtr == 8'h5 && ObSt != IDLE ) ? (1'b0) : (1'b1) ;
-   RamValid[6] = (RamPtr == 8'h6 && ObSt != IDLE ) ? (1'b0) : (1'b1) ;
-   RamValid[7] = (RamPtr == 8'h7 && ObSt != IDLE ) ? (1'b0) : (1'b1) ;
+   lg_RamValid[0] = (RamPtr == 8'h0 && ObSt != IDLE ) ? (1'b0) : (1'b1) ;
+   lg_RamValid[1] = (RamPtr == 8'h1 && ObSt != IDLE ) ? (1'b0) : (1'b1) ;
+   lg_RamValid[2] = (RamPtr == 8'h2 && ObSt != IDLE ) ? (1'b0) : (1'b1) ;
+   lg_RamValid[3] = (RamPtr == 8'h3 && ObSt != IDLE ) ? (1'b0) : (1'b1) ;
+   lg_RamValid[4] = (RamPtr == 8'h4 && ObSt != IDLE ) ? (1'b0) : (1'b1) ;
+   lg_RamValid[5] = (RamPtr == 8'h5 && ObSt != IDLE ) ? (1'b0) : (1'b1) ;
+   lg_RamValid[6] = (RamPtr == 8'h6 && ObSt != IDLE ) ? (1'b0) : (1'b1) ;
+   lg_RamValid[7] = (RamPtr == 8'h7 && ObSt != IDLE ) ? (1'b0) : (1'b1) ;
 end
 
 always_ff @(posedge clk or negedge rst_n) begin
@@ -448,7 +448,7 @@ end
 
 always_ff @(posedge clk or negedge rst_n) begin
    if(~rst_n) begin
-      ObSt <= 0 ;
+      ObSt <= IDLE ;
    end else begin
       ObSt <= ObNxtSt ;
    end
