@@ -20,8 +20,6 @@ module Mem  (
    input   [7:0] ObWrEn ,
    input   [7:0][31:0] ObWrAddr ,
    
-   
-   
    input   [31:0] m_axi_araddr ,
    input   [1:0] m_axi_arburst ,
    input   [0:0] m_axi_arid ,

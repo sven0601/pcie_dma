@@ -159,18 +159,21 @@ ObCtlr  ObCtlr (
 Mem  Mem (
    .clk ( axi_aclk ) ,
    .rst_n ( axi_aresetn ) ,
+   
    .IbWrData ( IbWrData ) ,
    .IbWrEn ( IbWrEn ) ,
    .IbWrAddr ( IbWrAddr ) ,
    .IbRdData ( IbRdData ) ,
    .IbRdEn ( IbRdEn ) ,
    .IbRdAddr ( IbRdAddr ) ,
+   
    .ObRdData ( ObRdData ) ,
    .ObRdEn ( ObRdEn ) ,
    .ObRdAddr ( ObRdAddr ) ,
    .ObWrData ( ObWrData ) ,
    .ObWrEn ( ObWrEn ) ,
    .ObWrAddr ( ObWrAddr ) ,
+   
    .JtagEn ( JtagJtagEn ) ,
    .RdAddr ( JtagRdAddr ) ,
    .RdData ( JtagRdData ) ,
