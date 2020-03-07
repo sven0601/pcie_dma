@@ -12,12 +12,16 @@ module Mem  (
    output  [7:0][127:0] IbRdData ,
    input   [7:0] IbRdEn ,
    input   [7:0][31:0] IbRdAddr ,
+   
    output  [127:0] ObRdData ,
    input    ObRdEn ,
    input   [31:0] ObRdAddr ,
    input   [7:0][127:0] ObWrData ,
    input   [7:0] ObWrEn ,
    input   [7:0][31:0] ObWrAddr ,
+   
+   
+   
    input   [31:0] m_axi_araddr ,
    input   [1:0] m_axi_arburst ,
    input   [0:0] m_axi_arid ,

@@ -1,33 +1,33 @@
-input    clk ,
-input    rst_n ,
+//input    clk ,
+//input    rst_n ,
 
-input   [127:0] IbWrData ,
-input    IbWrEn ,
-input   [31:0] IbWrAddr ,
-output  [7:0][127:0] IbRdData ,
-input   [7:0] IbRdEn ,
-input   [7:0][31:0] IbRdAddr ,
-output  [127:0] ObRdData ,
-input    ObRdEn ,
-input   [31:0] ObRdAddr ,
-input   [7:0][127:0] ObWrData ,
-input   [7:0] ObWrEn ,
-input   [7:0][31:0] ObWrAddr ,
+//input   [127:0] IbWrData ,
+//input    IbWrEn ,
+//input   [31:0] IbWrAddr ,
+//output  [7:0][127:0] IbRdData ,
+//input   [7:0] IbRdEn ,
+//input   [7:0][31:0] IbRdAddr ,
+//output  [127:0] ObRdData ,
+//input    ObRdEn ,
+//input   [31:0] ObRdAddr ,
+//input   [7:0][127:0] ObWrData ,
+//input   [7:0] ObWrEn ,
+//input   [7:0][31:0] ObWrAddr ,
 
-input   [31:0] m_axi_araddr ,
-input   [0:0]  m_axi_arid ,
-input   [1:0]  m_axi_arburst ,
-input   [7:0]  m_axi_arlen ,
-input   [2:0]  m_axi_arsize ,
-output         m_axi_arready ,
-input          m_axi_arvalid ,
+//input   [31:0] m_axi_araddr ,
+//input   [0:0]  m_axi_arid ,
+//input   [1:0]  m_axi_arburst ,
+//input   [7:0]  m_axi_arlen ,
+//input   [2:0]  m_axi_arsize ,
+//output         m_axi_arready ,
+//input          m_axi_arvalid ,
 
-output  [63:0] m_axi_rdata ,
-output  [0:0]  m_axi_rid ,
-output         m_axi_rlast ,
-input          m_axi_rready ,
-output  [1:0]  m_axi_rresp ,
-output         m_axi_rvalid ,
+//output  [63:0] m_axi_rdata ,
+//output  [0:0]  m_axi_rid ,
+//output         m_axi_rlast ,
+//input          m_axi_rready ,
+//output  [1:0]  m_axi_rresp ,
+//output         m_axi_rvalid ,
  
 // input   [31:0] m_axi_awaddr ,
 // input   [1:0] m_axi_awburst ,
@@ -50,7 +50,7 @@ logic JtagAcc ;
 
 logic arready ;
 
-logic [1:0] State ;
+//logic [1:0] State ;
 enum logic [2:0] {
    IDLE     = 3'h0 ,
    GET_ADDR = 3'h1 ,
@@ -95,7 +95,7 @@ always_ff @(posedge clk or negedge rst_n) begin : proc_Read
 
       if (arready & m_axi_arvalid) begin
          arready   <= 1 ;
-         if (m_axi_araddr == 32'h1_0000_0000) begin
+         if (m_axi_araddr == 32'b1_0000_0000) begin
             JtagAcc <= ~JtagAcc ;
          end
       end
@@ -104,4 +104,4 @@ end
 
 
 
-1600Bx8 = 12800B < 32k 
+//1600Bx8 = 12800B < 32k 

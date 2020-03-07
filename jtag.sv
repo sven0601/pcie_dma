@@ -3,7 +3,7 @@
 // Module : jtag
 //===========================================================================
 
-module jtag  (
+module jtag_axi  (
    input    aclk ,
    input    aresetn ,
    input    JtagEn ,
