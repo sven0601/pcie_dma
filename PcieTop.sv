@@ -57,7 +57,7 @@ wire [7:0][31:0] IbRdAddr ;
 wire [7:0][127:0] ObWrData ;
 wire [7:0] ObWrEn ;
 wire [7:0][31:0] ObWrAddr ;
-wire  JtagJtagEn ;
+wire  JtagEn ;
 wire [31:0] JtagRdAddr ;
 wire [127:0] JtagRdData ;
 wire  JtagRdEn ;
@@ -171,13 +171,13 @@ Mem  Mem (
    .ObWrData ( ObWrData ) ,
    .ObWrEn ( ObWrEn ) ,
    .ObWrAddr ( ObWrAddr ) ,
-   .JtagEn ( JtagJtagEn ) ,
-   .RdAddr ( JtagRdAddr ) ,
-   .RdData ( JtagRdData ) ,
-   .RdEn ( JtagRdEn ) ,
-   .WrAddr ( JtagWrAddr ) ,
-   .WrData ( JtagWrData ) ,
-   .WrEn ( JtagWrEn ) 
+   .JtagEn ( JtagEn ) ,
+   .JtagRdAddr ( JtagRdAddr ) ,
+   .JtagRdData ( JtagRdData ) ,
+   .JtagRdEn ( JtagRdEn ) ,
+   .JtagWrAddr ( JtagWrAddr ) ,
+   .JtagWrData ( JtagWrData ) ,
+   .JtagWrEn ( JtagWrEn ) 
 ) ;
 
 Crypto  Crypto (
@@ -195,10 +195,10 @@ Crypto  Crypto (
    .ObIPSECValid ( ObRamValid ) 
 ) ;
 
-jtag_axi  m_jtag (
+jtag  m_jtag (
    .aclk ( axi_aclk ) ,
    .aresetn ( axi_aresetn ) ,
-   .JtagEn ( JtagJtagEn ) ,
+   .JtagEn ( JtagEn ) ,
    .RdAddr ( JtagRdAddr ) ,
    .RdData ( JtagRdData ) ,
    .RdEn ( JtagRdEn ) ,

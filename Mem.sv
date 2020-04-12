@@ -18,61 +18,51 @@ module Mem  (
    input   [7:0][127:0] ObWrData ,
    input   [7:0] ObWrEn ,
    input   [7:0][31:0] ObWrAddr ,
-   input   [31:0] m_axi_araddr ,
-   input   [1:0] m_axi_arburst ,
-   input   [0:0] m_axi_arid ,
-   input   [7:0] m_axi_arlen ,
-   output   m_axi_arready ,
-   input   [2:0] m_axi_arsize ,
-   input    m_axi_arvalid ,
-   input   [31:0] m_axi_awaddr ,
-   input   [1:0] m_axi_awburst ,
-   input   [0:0] m_axi_awid ,
-   input   [7:0] m_axi_awlen ,
-   output   m_axi_awready ,
-   input   [2:0] m_axi_awsize ,
-   input    m_axi_awvalid ,
-   output  [0:0] m_axi_bid ,
-   input    m_axi_bready ,
-   output  [1:0] m_axi_bresp ,
-   output   m_axi_bvalid ,
-   input    m_axi_wlast ,
-   output   m_axi_wready ,
-   input   [7:0] m_axi_wstrb ,
-   input    m_axi_wvalid ,
-   input   [63:0] m_axi_wdata ,
-   output  [63:0] m_axi_rdata ,
-   output  [0:0] m_axi_rid ,
-   output   m_axi_rlast ,
-   input    m_axi_rready ,
-   output  [1:0] m_axi_rresp ,
-   output   m_axi_rvalid 
+   input    JtagEn ,
+   input   [31:0] JtagRdAddr ,
+   output  [127:0] JtagRdData ,
+   input    JtagRdEn ,
+   input   [31:0] JtagWrAddr ,
+   input   [127:0] JtagWrData ,
+   input    JtagWrEn 
 ) ;
 
 //=======START DECLARING WIRES ================================================//
+wire [127:0] Ib_x8_WrData ;
+wire  Ib_x8_WrEn ;
+wire [31:0] Ib_x8_WrAddr ;
+wire [7:0][127:0] Ib_x8_RdData ;
+wire [7:0] Ib_x8_RdEn ;
+wire [7:0][31:0] Ib_x8_RdAddr ;
+wire [127:0] Ob_x8_RdData ;
+wire  Ob_x8_RdEn ;
+wire [31:0] Ob_x8_RdAddr ;
+wire [7:0][127:0] Ob_x8_WrData ;
+wire [7:0] Ob_x8_WrEn ;
+wire [7:0][31:0] Ob_x8_WrAddr ;
 
 //=======FINISH DECLARING WIRES ===============================================//
 
-ram  IbRam (
+ram_x8_ib  ram_ib (
    .clk ( clk ) ,
    .rst_n ( rst_n ) ,
-   .WrData ( IbWrData ) ,
-   .WrEn ( IbWrEn ) ,
-   .WrAddr ( IbWrAddr ) ,
-   .RdData ( IbRdData ) ,
-   .RdEn ( IbRdEn ) ,
-   .RdAddr ( IbRdAddr ) 
+   .WrData ( Ib_x8_WrData ) ,
+   .WrEn ( Ib_x8_WrEn ) ,
+   .WrAddr ( Ib_x8_WrAddr ) ,
+   .RdData ( Ib_x8_RdData ) ,
+   .RdEn ( Ib_x8_RdEn ) ,
+   .RdAddr ( Ib_x8_RdAddr ) 
 ) ;
 
-ram  ObRam (
+ram_x8_ob  ram_ob (
    .clk ( clk ) ,
    .rst_n ( rst_n ) ,
-   .RdData ( ObRdData ) ,
-   .RdEn ( ObRdEn ) ,
-   .RdAddr ( ObRdAddr ) ,
-   .WrData ( ObWrData ) ,
-   .WrEn ( ObWrEn ) ,
-   .WrAddr ( ObWrAddr ) 
+   .RdData ( Ob_x8_RdData ) ,
+   .RdEn ( Ob_x8_RdEn ) ,
+   .RdAddr ( Ob_x8_RdAddr ) ,
+   .WrData ( Ob_x8_WrData ) ,
+   .WrEn ( Ob_x8_WrEn ) ,
+   .WrAddr ( Ob_x8_WrAddr ) 
 ) ;
 
 `include "Mem_lib.svh"

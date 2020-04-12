@@ -4,7 +4,7 @@ module ram (
    input  [127:0]    WrData ,
    input             RdEn ,
    input  [31:0]     RdAddr ,
-   input  [127:0]    RdData ,
+   output  [127:0]   RdData ,
 
    input             clk ,
    input             rst_n  

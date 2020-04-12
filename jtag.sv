@@ -4,18 +4,26 @@
 //===========================================================================
 
 module jtag  (
-   input    aclk ,
-   input    aresetn ,
-   input    JtagEn ,
-   input   [31:0] RdAddr ,
-   output  [127:0] RdData ,
-   input    RdEn ,
-   input   [31:0] WrAddr ,
-   input   [127:0] WrData ,
-   input    WrEn 
+   input    clk ,
+   input    rst_n ,
+   output   JtagEn ,
+   output  [31:0] RdAddr ,
+   input   [127:0] RdData ,
+   output   RdEn ,
+   output  [31:0] WrAddr ,
+   output  [127:0] WrData ,
+   output   WrEn 
 ) ;
 
 //=======START DECLARING WIRES ================================================//
+wire  m_axi_arlock ;
+wire [3:0] m_axi_arqos ;
+wire [2:0] m_axi_arprot ;
+wire [3:0] m_axi_arcache ;
+wire  m_axi_awlock ;
+wire [3:0] m_axi_awqos ;
+wire [2:0] m_axi_awprot ;
+wire [3:0] m_axi_awcache ;
 wire [31:0] m_axi_araddr ;
 wire [1:0] m_axi_arburst ;
 wire [0:0] m_axi_arid ;
@@ -48,17 +56,17 @@ wire  m_axi_rvalid ;
 
 //=======FINISH DECLARING WIRES ===============================================//
 
-jtag  m_jtag (
-   .aclk ( aclk ) ,
-   .aresetn ( aresetn ) ,
-   .m_axi_arlock (  ) ,
-   .m_axi_arqos (  ) ,
-   .m_axi_arprot (  ) ,
-   .m_axi_arcache (  ) ,
-   .m_axi_awlock (  ) ,
-   .m_axi_awqos (  ) ,
-   .m_axi_awprot (  ) ,
-   .m_axi_awcache (  ) ,
+jtag_axi  m_jtag (
+   .aclk ( clk ) ,
+   .aresetn ( rst_n ) ,
+   .m_axi_arlock ( m_axi_arlock ) ,
+   .m_axi_arqos ( m_axi_arqos ) ,
+   .m_axi_arprot ( m_axi_arprot ) ,
+   .m_axi_arcache ( m_axi_arcache ) ,
+   .m_axi_awlock ( m_axi_awlock ) ,
+   .m_axi_awqos ( m_axi_awqos ) ,
+   .m_axi_awprot ( m_axi_awprot ) ,
+   .m_axi_awcache ( m_axi_awcache ) ,
    .m_axi_araddr ( m_axi_araddr ) ,
    .m_axi_arburst ( m_axi_arburst ) ,
    .m_axi_arid ( m_axi_arid ) ,

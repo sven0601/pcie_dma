@@ -16,7 +16,7 @@ logic [127:0]  lg_WrData ;
 logic          lg_WrEn;
 logic [31:0]   WrDataBuffer[3:0] ;
 logic [31:0]   WrDataBuffer_Nxt[3:0] ;
-logic [11:0]   lg_WrAddr ;
+logic [31:0]   lg_WrAddr ;
 // logic [7:0]    lg_DataValid ;
 logic [2:0]    DataBufferCntr ;
 logic [7:0]    enableUseRam ;
