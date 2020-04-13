@@ -21,7 +21,7 @@ assign Ib_x8_WrAddr = (JtagEn == 1'b1 &&
 assign Ib_x8_RdEn   = lg_Ib_x8_RdEn  ;
 assign Ib_x8_RdAddr = lg_Ib_x8_RdAddr;
 
-always_comb : proc_Ib_Ram
+always_comb begin : proc_Ib_Ram
    lg_JtagIb_x8_RdData = 0;
    lg_Ib_x8_RdEn       = '{default: '0};
    lg_Ib_x8_RdAddr     = '{default: '0};
@@ -68,6 +68,7 @@ always_comb : proc_Ib_Ram
             lg_Ib_x8_RdEn[7]    = 1'b1 ;
             lg_Ib_x8_RdAddr[7]  = {24'h0, JtagRdAddr[7:0]} ;
          end
+         endcase // JtagRdAddr[11:8]
       end
    end else begin
       lg_Ib_x8_RdEn   = IbRdEn;
@@ -87,7 +88,7 @@ assign Ob_x8_WrData = lg_Ob_x8_WrData;
 assign Ob_x8_WrEn   = lg_Ob_x8_WrEn;
 assign Ob_x8_WrAddr = lg_Ob_x8_WrAddr;
 
-always_comb : proc_Ob_Ram
+always_comb begin : proc_Ob_Ram
    lg_Ob_x8_WrData     = '{default: '0};
    lg_Ob_x8_WrEn       = '{default: '0};
    lg_Ob_x8_WrAddr     = '{default: '0};
@@ -134,6 +135,7 @@ always_comb : proc_Ob_Ram
             lg_Ob_x8_WrEn[7]    = 1'b1 ;
             lg_Ob_x8_WrAddr[7]  = {24'h0, JtagWrAddr[7:0]} ;
          end
+         endcase
       end
    end else begin
       lg_Ob_x8_WrData = ObWrData;

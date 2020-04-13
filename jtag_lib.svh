@@ -20,11 +20,11 @@ logic JtagEnReg;
 //--------------------------------------------------------------------
 
 enum logic[3:0] {
-   FAULT   = 4'h0 ,
-   GETADDR = 4'h1 ,
-   GETDATA = 4'h2 ,
-   RESPONSE0 = 4'h4,
-   RESPONSE1 = 4'h8
+   RD_FAULT   = 4'h0 ,
+   RD_GETADDR = 4'h1 ,
+   RD_GETDATA = 4'h2 ,
+   RD_RESPONSE0 = 4'h4,
+   RD_RESPONSE1 = 4'h8
 } JtagAxiRdSt ;
 
 logic          ArReady ;
@@ -40,11 +40,11 @@ logic [63:0]   lg_RData;
 //--------------------------------------------------------------------
 
 enum logic[3:0] {
-   FAULT    = 4'h0 ,
-   GETADDR  = 4'h1 ,
-   GETDATA0 = 4'h2 ,
-   GETDATA1 = 4'h4,
-   RESPONSE = 4'h8,
+   WR_FAULT    = 4'h0 ,
+   WR_GETADDR  = 4'h1 ,
+   WR_GETDATA0 = 4'h2 ,
+   WR_GETDATA1 = 4'h4 ,
+   WR_RESPONSE = 4'h8 
 } JtagAxiWrSt ;
 
 logic [31:0]   AwAddr;
@@ -69,19 +69,19 @@ assign m_axi_rvalid = RValid ;
 
 always_ff @(posedge clk or negedge rst_n) begin : proc_Rd
    if (~rst_n) begin
-      JtagAxiSt      <= GETADDR ;
+      JtagAxiRdSt      <= RD_GETADDR ;
       ArReady        <= 1 ;
       RdDataDelayCntr <= 0 ;
       lg_RdEn        <= 0;
    end else begin
       case (JtagAxiRdSt)
-         GETADDR   : begin
+         RD_GETADDR   : begin
             if (m_axi_arvalid) begin
                ArReady              <= 0 ;
                if (m_axi_arburst != 1 // INCR only
                      || m_axi_arlen != 4
                      || m_axi_arsize != 4) begin
-                  JtagAxiSt         <= FAULT ;
+                  JtagAxiRdSt         <= RD_FAULT ;
 
                   // initiate the next state
                   RValid         <= 1;
@@ -91,17 +91,17 @@ always_ff @(posedge clk or negedge rst_n) begin : proc_Rd
                   ArAddr[31:0]      <= {m_axi_araddr[31], 4'h0, m_axi_araddr[30:4]} ; // remove the last 4b LSB
                   ArId              <= m_axi_arid ;
                   // next 
-                  JtagAxiSt         <= GETDATA ;
+                  JtagAxiRdSt         <= RD_GETDATA ;
                   // initiate the next state
                   lg_RdEn           <= 1;
                   RdDataDelayCntr   <= 0;
                end
             end
          end
-         GETDATA: begin
+         RD_GETDATA: begin
             if (RdDataDelayCntr == `RdDelayNum) begin
                lg_RdEn         <= 0;
-               JtagAxiRdSt     <= RESPONSE0 ;
+               JtagAxiRdSt     <= RD_RESPONSE0 ;
                // initiate the next state
                RId            <= ArId ;
                RValid         <= 1;
@@ -112,9 +112,9 @@ always_ff @(posedge clk or negedge rst_n) begin : proc_Rd
                RdDataDelayCntr <= RdDataDelayCntr + 1;
             end
          end
-         RESPONSE0: begin
+         RD_RESPONSE0: begin
             if (m_axi_rready) begin
-               JtagAxiRdSt   <= RESPONSE1 ;
+               JtagAxiRdSt   <= RD_RESPONSE1 ;
                // initiate the next state
                RId            <= ArId ;
                RValid         <= 1;
@@ -123,9 +123,9 @@ always_ff @(posedge clk or negedge rst_n) begin : proc_Rd
                RResp          <= `OKAY;
             end
          end
-         RESPONSE1: begin
+         RD_RESPONSE1: begin
             if (m_axi_rready) begin
-               JtagAxiRdSt    <= GETADDR ;
+               JtagAxiRdSt    <= RD_GETADDR ;
                RValid         <= 0;
                RLast          <= 0;
                RResp          <= `SLVERR;
@@ -133,9 +133,9 @@ always_ff @(posedge clk or negedge rst_n) begin : proc_Rd
                ArReady        <= 1;
             end
          end
-         FAULT: begin
+         RD_FAULT: begin
             if (m_axi_rready) begin
-               JtagAxiRdSt    <= GETADDR ;
+               JtagAxiRdSt    <= RD_GETADDR ;
                RValid         <= 0;
                RLast          <= 0;
                RResp          <= `SLVERR;
@@ -173,7 +173,7 @@ end
 
 always_ff @(posedge clk or negedge rst_n) begin : proc_Wr
    if (~rst_n) begin
-      JtagAxiWrSt    <= GETADDR ;
+      JtagAxiWrSt    <= WR_GETADDR ;
       AwReady        <= 1;
       AwAddr         <= '0;
       WReady         <= 0;
@@ -182,7 +182,7 @@ always_ff @(posedge clk or negedge rst_n) begin : proc_Wr
       lg_WrEn        <= 0;
    end else begin
       case (JtagAxiWrSt)
-      GETADDR: begin
+      WR_GETADDR: begin
          if (m_axi_awvalid) begin
             if (m_axi_arburst != 1 ||
                   m_axi_arlen != 4 ||
@@ -192,7 +192,7 @@ always_ff @(posedge clk or negedge rst_n) begin : proc_Wr
                AwReady        <= 0;
                WReady         <= 1;
             end else begin
-               JtagAxiWrSt    <= GETDATA0;
+               JtagAxiWrSt    <= WR_GETDATA0;
                AwAddr[31:0]   <= {m_axi_awaddr[31], 4'h0, m_axi_awaddr[30:4]};
                // initiate the next state
                AwReady        <= 0;
@@ -201,9 +201,9 @@ always_ff @(posedge clk or negedge rst_n) begin : proc_Wr
             end
          end
       end
-      GETDATA0: begin
+      WR_GETDATA0: begin
          if(m_axi_wvalid) begin
-            JtagAxiWrSt <= GETDATA1;
+            JtagAxiWrSt <= WR_GETDATA1;
             // initiate the next state
             if (m_axi_wstrb != 8'hFF) begin
                BResp          <= `DECERR;
@@ -212,7 +212,7 @@ always_ff @(posedge clk or negedge rst_n) begin : proc_Wr
             lg_WrData[63:0]   <= m_axi_wdata[63:0] ;
          end
       end
-      GETDATA1: begin
+      WR_GETDATA1: begin
          if(m_axi_wvalid) begin
             if (m_axi_wlast)
                JtagAxiWrSt       <= WRITE;
@@ -227,9 +227,9 @@ always_ff @(posedge clk or negedge rst_n) begin : proc_Wr
             lg_WrData[127:64] <= m_axi_wdata[63:0] ;
          end
       end
-      WRITE: begin
+      WR_WRITE: begin
          if (BResp != `OKAY || AwAddr[31:0] == {1'h1, 4'h0, 27'h7FF_FFFF}) begin
-            JtagAxiWrSt       <= RESPONSE;
+            JtagAxiWrSt       <= WR_RESPONSE;
             // initiate the next state
             BValid            <= 1;
             BId               <= AwId;
@@ -246,10 +246,10 @@ always_ff @(posedge clk or negedge rst_n) begin : proc_Wr
             end
          end
       end
-      RESPONSE: begin
+      WR_RESPONSE: begin
          AwAddr            <= '0;
          if (m_axi_bvalid) begin
-            JtagAxiWrSt       <= GETADDR;
+            JtagAxiWrSt       <= WR_GETADDR;
             BValid            <= 0;
             BResp             <= `SLVERR;
             // initiate the next state
