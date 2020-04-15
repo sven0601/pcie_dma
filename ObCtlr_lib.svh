@@ -446,11 +446,4 @@ always_ff @(posedge clk or negedge rst_n) begin
    end
 end
 
-always_ff @(posedge clk or negedge rst_n) begin
-   if(~rst_n) begin
-      ObSt <= IDLE ;
-   end else begin
-      ObSt <= ObNxtSt ;
-   end
-end
 

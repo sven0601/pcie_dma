@@ -19,28 +19,47 @@ wire  sys_rst_n_c ;
 wire  user_lnk_up ;
 wire  axi_aclk ;
 wire  axi_aresetn ;
-wire [3:0] usr_irq_req ;
-wire [3:0] usr_irq_ack ;
+wire [15:0] usr_irq_req ;
+wire [15:0] usr_irq_ack ;
 wire  msi_enable ;
 wire [2:0] msi_vector_width ;
-wire [18:0] cfg_mgmt_addr ;
-wire  cfg_mgmt_write ;
-wire [31:0] cfg_mgmt_write_data ;
-wire [3:0] cfg_mgmt_byte_enable ;
-wire  cfg_mgmt_read ;
-wire [31:0] cfg_mgmt_read_data ;
-wire  cfg_mgmt_read_write_done ;
-wire  cfg_mgmt_type1_cfg_reg_access ;
-wire [63:0] s_axis_c2h_tdata_0 ;
-wire  s_axis_c2h_tlast_0 ;
-wire  s_axis_c2h_tvalid_0 ;
-wire  s_axis_c2h_tready_0 ;
-wire [7:0] s_axis_c2h_tkeep_0 ;
-wire [63:0] m_axis_h2c_tdata_0 ;
-wire  m_axis_h2c_tlast_0 ;
-wire  m_axis_h2c_tvalid_0 ;
-wire  m_axis_h2c_tready_0 ;
-wire [7:0] m_axis_h2c_tkeep_0 ;
+wire [18:0] pcie_cfg_mgmt_addr ;
+wire  pcie_cfg_mgmt_write_en ;
+wire [31:0] pcie_cfg_mgmt_write_data ;
+wire [3:0] pcie_cfg_mgmt_byte_en ;
+wire  pcie_cfg_mgmt_read_en ;
+wire [31:0] pcie_cfg_mgmt_read_data ;
+wire  pcie_cfg_mgmt_read_write_done ;
+wire  pcie_cfg_mgmt_type1_cfg_reg_access ;
+wire [63:0] s_axis_c2h_0_tdata ;
+wire  s_axis_c2h_0_tlast ;
+wire  s_axis_c2h_0_tvalid ;
+wire  s_axis_c2h_0_tready ;
+wire [7:0] s_axis_c2h_0_tkeep ;
+wire [63:0] m_axis_h2c_0_tdata ;
+wire  m_axis_h2c_0_tlast ;
+wire  m_axis_h2c_0_tvalid ;
+wire  m_axis_h2c_0_tready ;
+wire [7:0] m_axis_h2c_0_tkeep ;
+wire [31:0] m_axi_lite_araddr ;
+wire [2:0] m_axi_lite_arprot ;
+wire  m_axi_lite_arready ;
+wire  m_axi_lite_arvalid ;
+wire [31:0] m_axi_lite_awaddr ;
+wire [2:0] m_axi_lite_awprot ;
+wire  m_axi_lite_awready ;
+wire  m_axi_lite_awvalid ;
+wire  m_axi_lite_bready ;
+wire [1:0] m_axi_lite_bresp ;
+wire  m_axi_lite_bvalid ;
+wire [31:0] m_axi_lite_rdata ;
+wire  m_axi_lite_rready ;
+wire [1:0] m_axi_lite_rresp ;
+wire  m_axi_lite_rvalid ;
+wire [31:0] m_axi_lite_wdata ;
+wire  m_axi_lite_wready ;
+wire [3:0] m_axi_lite_wstrb ;
+wire  m_axi_lite_wvalid ;
 wire [7:0] IbDataValid ;
 wire [7:0] IbRamValid ;
 wire [127:0] IbWrData ;
@@ -84,34 +103,53 @@ xdma_0  m_dma (
    .sys_clk ( sys_clk ) ,
    .sys_rst_n ( sys_rst_n_c ) ,
    .user_lnk_up ( user_lnk_up ) ,
-   .pci_exp_txp ( pci_exp_txp ) ,
-   .pci_exp_txn ( pci_exp_txn ) ,
-   .pci_exp_rxp ( pci_exp_rxp ) ,
-   .pci_exp_rxn ( pci_exp_rxn ) ,
+   .pcie_exp_txp ( pci_exp_txp ) ,
+   .pcie_exp_txn ( pci_exp_txn ) ,
+   .pcie_exp_rxp ( pci_exp_rxp ) ,
+   .pcie_exp_rxn ( pci_exp_rxn ) ,
    .axi_aclk ( axi_aclk ) ,
    .axi_aresetn ( axi_aresetn ) ,
    .usr_irq_req ( usr_irq_req ) ,
    .usr_irq_ack ( usr_irq_ack ) ,
    .msi_enable ( msi_enable ) ,
    .msi_vector_width ( msi_vector_width ) ,
-   .cfg_mgmt_addr ( cfg_mgmt_addr ) ,
-   .cfg_mgmt_write ( cfg_mgmt_write ) ,
-   .cfg_mgmt_write_data ( cfg_mgmt_write_data ) ,
-   .cfg_mgmt_byte_enable ( cfg_mgmt_byte_enable ) ,
-   .cfg_mgmt_read ( cfg_mgmt_read ) ,
-   .cfg_mgmt_read_data ( cfg_mgmt_read_data ) ,
-   .cfg_mgmt_read_write_done ( cfg_mgmt_read_write_done ) ,
-   .cfg_mgmt_type1_cfg_reg_access ( cfg_mgmt_type1_cfg_reg_access ) ,
-   .s_axis_c2h_tdata_0 ( s_axis_c2h_tdata_0 ) ,
-   .s_axis_c2h_tlast_0 ( s_axis_c2h_tlast_0 ) ,
-   .s_axis_c2h_tvalid_0 ( s_axis_c2h_tvalid_0 ) ,
-   .s_axis_c2h_tready_0 ( s_axis_c2h_tready_0 ) ,
-   .s_axis_c2h_tkeep_0 ( s_axis_c2h_tkeep_0 ) ,
-   .m_axis_h2c_tdata_0 ( m_axis_h2c_tdata_0 ) ,
-   .m_axis_h2c_tlast_0 ( m_axis_h2c_tlast_0 ) ,
-   .m_axis_h2c_tvalid_0 ( m_axis_h2c_tvalid_0 ) ,
-   .m_axis_h2c_tready_0 ( m_axis_h2c_tready_0 ) ,
-   .m_axis_h2c_tkeep_0 ( m_axis_h2c_tkeep_0 ) 
+   .pcie_cfg_mgmt_addr ( pcie_cfg_mgmt_addr ) ,
+   .pcie_cfg_mgmt_write_en ( pcie_cfg_mgmt_write_en ) ,
+   .pcie_cfg_mgmt_write_data ( pcie_cfg_mgmt_write_data ) ,
+   .pcie_cfg_mgmt_byte_en ( pcie_cfg_mgmt_byte_en ) ,
+   .pcie_cfg_mgmt_read_en ( pcie_cfg_mgmt_read_en ) ,
+   .pcie_cfg_mgmt_read_data ( pcie_cfg_mgmt_read_data ) ,
+   .pcie_cfg_mgmt_read_write_done ( pcie_cfg_mgmt_read_write_done ) ,
+   .pcie_cfg_mgmt_type1_cfg_reg_access ( pcie_cfg_mgmt_type1_cfg_reg_access ) ,
+   .s_axis_c2h_0_tdata ( s_axis_c2h_0_tdata ) ,
+   .s_axis_c2h_0_tlast ( s_axis_c2h_0_tlast ) ,
+   .s_axis_c2h_0_tvalid ( s_axis_c2h_0_tvalid ) ,
+   .s_axis_c2h_0_tready ( s_axis_c2h_0_tready ) ,
+   .s_axis_c2h_0_tkeep ( s_axis_c2h_0_tkeep ) ,
+   .m_axis_h2c_0_tdata ( m_axis_h2c_0_tdata ) ,
+   .m_axis_h2c_0_tlast ( m_axis_h2c_0_tlast ) ,
+   .m_axis_h2c_0_tvalid ( m_axis_h2c_0_tvalid ) ,
+   .m_axis_h2c_0_tready ( m_axis_h2c_0_tready ) ,
+   .m_axis_h2c_0_tkeep ( m_axis_h2c_0_tkeep ) ,
+   .m_axi_lite_araddr ( m_axi_lite_araddr ) ,
+   .m_axi_lite_arprot ( m_axi_lite_arprot ) ,
+   .m_axi_lite_arready ( m_axi_lite_arready ) ,
+   .m_axi_lite_arvalid ( m_axi_lite_arvalid ) ,
+   .m_axi_lite_awaddr ( m_axi_lite_awaddr ) ,
+   .m_axi_lite_awprot ( m_axi_lite_awprot ) ,
+   .m_axi_lite_awready ( m_axi_lite_awready ) ,
+   .m_axi_lite_awvalid ( m_axi_lite_awvalid ) ,
+   .m_axi_lite_bready ( m_axi_lite_bready ) ,
+   .m_axi_lite_bresp ( m_axi_lite_bresp ) ,
+   .m_axi_lite_bvalid ( m_axi_lite_bvalid ) ,
+   .m_axi_lite_rdata ( m_axi_lite_rdata ) ,
+   .m_axi_lite_rready ( m_axi_lite_rready ) ,
+   .m_axi_lite_rresp ( m_axi_lite_rresp ) ,
+   .m_axi_lite_rvalid ( m_axi_lite_rvalid ) ,
+   .m_axi_lite_wdata ( m_axi_lite_wdata ) ,
+   .m_axi_lite_wready ( m_axi_lite_wready ) ,
+   .m_axi_lite_wstrb ( m_axi_lite_wstrb ) ,
+   .m_axi_lite_wvalid ( m_axi_lite_wvalid ) 
 ) ;
 
 IbCtlr  IbCtlr (
@@ -122,19 +160,38 @@ IbCtlr  IbCtlr (
    .WrData ( IbWrData ) ,
    .WrEn ( IbWrEn ) ,
    .WrAddr ( IbWrAddr ) ,
-   .cfg_mgmt_addr ( cfg_mgmt_addr ) ,
-   .cfg_mgmt_write ( cfg_mgmt_write ) ,
-   .cfg_mgmt_write_data ( cfg_mgmt_write_data ) ,
-   .cfg_mgmt_byte_enable ( cfg_mgmt_byte_enable ) ,
-   .cfg_mgmt_read ( cfg_mgmt_read ) ,
-   .cfg_mgmt_read_data ( cfg_mgmt_read_data ) ,
-   .cfg_mgmt_read_write_done ( cfg_mgmt_read_write_done ) ,
-   .cfg_mgmt_type1_cfg_reg_access ( cfg_mgmt_type1_cfg_reg_access ) ,
-   .m_axis_h2c_tdata_0 ( m_axis_h2c_tdata_0 ) ,
-   .m_axis_h2c_tlast_0 ( m_axis_h2c_tlast_0 ) ,
-   .m_axis_h2c_tvalid_0 ( m_axis_h2c_tvalid_0 ) ,
-   .m_axis_h2c_tready_0 ( m_axis_h2c_tready_0 ) ,
-   .m_axis_h2c_tkeep_0 ( m_axis_h2c_tkeep_0 ) 
+   .cfg_mgmt_addr ( pcie_cfg_mgmt_addr ) ,
+   .cfg_mgmt_write ( pcie_cfg_mgmt_write_en ) ,
+   .cfg_mgmt_write_data ( pcie_cfg_mgmt_write_data ) ,
+   .cfg_mgmt_byte_enable ( pcie_cfg_mgmt_byte_en ) ,
+   .cfg_mgmt_read ( pcie_cfg_mgmt_read_en ) ,
+   .cfg_mgmt_read_data ( pcie_cfg_mgmt_read_data ) ,
+   .cfg_mgmt_read_write_done ( pcie_cfg_mgmt_read_write_done ) ,
+   .cfg_mgmt_type1_cfg_reg_access ( pcie_cfg_mgmt_type1_cfg_reg_access ) ,
+   .m_axis_h2c_tdata_0 ( m_axis_h2c_0_tdata ) ,
+   .m_axis_h2c_tlast_0 ( m_axis_h2c_0_tlast ) ,
+   .m_axis_h2c_tvalid_0 ( m_axis_h2c_0_tvalid ) ,
+   .m_axis_h2c_tready_0 ( m_axis_h2c_0_tready ) ,
+   .m_axis_h2c_tkeep_0 ( m_axis_h2c_0_tkeep ) ,
+   .m_axi_lite_araddr ( m_axi_lite_araddr ) ,
+   .m_axi_lite_arprot ( m_axi_lite_arprot ) ,
+   .m_axi_lite_arready ( m_axi_lite_arready ) ,
+   .m_axi_lite_arvalid ( m_axi_lite_arvalid ) ,
+   .m_axi_lite_awaddr ( m_axi_lite_awaddr ) ,
+   .m_axi_lite_awprot ( m_axi_lite_awprot ) ,
+   .m_axi_lite_awready ( m_axi_lite_awready ) ,
+   .m_axi_lite_awvalid ( m_axi_lite_awvalid ) ,
+   .m_axi_lite_bready ( m_axi_lite_bready ) ,
+   .m_axi_lite_bresp ( m_axi_lite_bresp ) ,
+   .m_axi_lite_bvalid ( m_axi_lite_bvalid ) ,
+   .m_axi_lite_rdata ( m_axi_lite_rdata ) ,
+   .m_axi_lite_rready ( m_axi_lite_rready ) ,
+   .m_axi_lite_rresp ( m_axi_lite_rresp ) ,
+   .m_axi_lite_rvalid ( m_axi_lite_rvalid ) ,
+   .m_axi_lite_wdata ( m_axi_lite_wdata ) ,
+   .m_axi_lite_wready ( m_axi_lite_wready ) ,
+   .m_axi_lite_wstrb ( m_axi_lite_wstrb ) ,
+   .m_axi_lite_wvalid ( m_axi_lite_wvalid ) 
 ) ;
 
 ObCtlr  ObCtlr (
@@ -149,11 +206,11 @@ ObCtlr  ObCtlr (
    .usr_irq_ack ( usr_irq_ack ) ,
    .msi_enable ( msi_enable ) ,
    .msi_vector_width ( msi_vector_width ) ,
-   .s_axis_c2h_tdata_0 ( s_axis_c2h_tdata_0 ) ,
-   .s_axis_c2h_tlast_0 ( s_axis_c2h_tlast_0 ) ,
-   .s_axis_c2h_tvalid_0 ( s_axis_c2h_tvalid_0 ) ,
-   .s_axis_c2h_tready_0 ( s_axis_c2h_tready_0 ) ,
-   .s_axis_c2h_tkeep_0 ( s_axis_c2h_tkeep_0 ) 
+   .s_axis_c2h_tdata_0 ( s_axis_c2h_0_tdata ) ,
+   .s_axis_c2h_tlast_0 ( s_axis_c2h_0_tlast ) ,
+   .s_axis_c2h_tvalid_0 ( s_axis_c2h_0_tvalid ) ,
+   .s_axis_c2h_tready_0 ( s_axis_c2h_0_tready ) ,
+   .s_axis_c2h_tkeep_0 ( s_axis_c2h_0_tkeep ) 
 ) ;
 
 Mem  Mem (
@@ -196,8 +253,8 @@ Crypto  Crypto (
 ) ;
 
 jtag  m_jtag (
-   .aclk ( axi_aclk ) ,
-   .aresetn ( axi_aresetn ) ,
+   .clk ( axi_aclk ) ,
+   .rst_n ( axi_aresetn ) ,
    .JtagEn ( JtagEn ) ,
    .RdAddr ( JtagRdAddr ) ,
    .RdData ( JtagRdData ) ,

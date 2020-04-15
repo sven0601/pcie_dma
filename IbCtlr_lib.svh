@@ -46,8 +46,8 @@ assign ValidReady = tvalid & lg_tready ;
  */
 assign tkeepDW =  (tkeep == 8'h0F || tkeep == 8'hF0) ? 2'h1 : ( (tkeep == 8'hFF) ? 2'h2 : 0) ;
 
-assign tdataDW[32:0] = (tkeep[3:0] == 4'hF) ? tdata[31:00] : tdata[63:32] ;
-assign tdataDW[32:0] = (tkeep[7:4] == 4'hF) ? tdata[63:32] : 32'h0 ;
+assign tdataDW[31:00] = (tkeep[3:0] == 4'hF) ? tdata[31:00] : tdata[63:32] ;
+assign tdataDW[63:32] = (tkeep[7:4] == 4'hF) ? tdata[63:32] : 32'h0 ;
 
 
 always_comb begin : proc_InputOfBuffer
@@ -57,24 +57,24 @@ always_comb begin : proc_InputOfBuffer
    if (ValidReady) begin
       case(DataBufferCntr)
          3'h0: begin
-            WrDataBuffer_Nxt[1] <= tdataDW[31:00] ;
-            WrDataBuffer_Nxt[2] <= tdataDW[63:32] ;
+            WrDataBuffer_Nxt[1] = tdataDW[31:00] ;
+            WrDataBuffer_Nxt[2] = tdataDW[63:32] ;
          end
          3'h1: begin
-            WrDataBuffer_Nxt[2] <= tdataDW[31:00] ;
-            WrDataBuffer_Nxt[3] <= tdataDW[63:32] ;
+            WrDataBuffer_Nxt[2] = tdataDW[31:00] ;
+            WrDataBuffer_Nxt[3] = tdataDW[63:32] ;
          end
          3'h2: begin
-            WrDataBuffer_Nxt[3] <= tdataDW[31:00] ;
-            WrDataBuffer_Nxt[0] <= tdataDW[63:32] ;
+            WrDataBuffer_Nxt[3] = tdataDW[31:00] ;
+            WrDataBuffer_Nxt[0] = tdataDW[63:32] ;
          end
          3'h3: begin
-            WrDataBuffer_Nxt[0] <= tdataDW[31:00] ;
-            WrDataBuffer_Nxt[1] <= tdataDW[63:32] ;
+            WrDataBuffer_Nxt[0] = tdataDW[31:00] ;
+            WrDataBuffer_Nxt[1] = tdataDW[63:32] ;
          end
          3'h7: begin
-            WrDataBuffer_Nxt[0] <= tdataDW[31:00] ;
-            WrDataBuffer_Nxt[1] <= tdataDW[63:32] ;
+            WrDataBuffer_Nxt[0] = tdataDW[31:00] ;
+            WrDataBuffer_Nxt[1] = tdataDW[63:32] ;
          end
       endcase
    end

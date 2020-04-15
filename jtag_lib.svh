@@ -39,18 +39,21 @@ logic [63:0]   lg_RData;
 
 //--------------------------------------------------------------------
 
-enum logic[3:0] {
-   WR_FAULT    = 4'h0 ,
-   WR_GETADDR  = 4'h1 ,
-   WR_GETDATA0 = 4'h2 ,
-   WR_GETDATA1 = 4'h4 ,
-   WR_RESPONSE = 4'h8 
+enum logic[4:0] {
+   WR_FAULT    = 5'h0 ,
+   WR_GETADDR  = 5'h1 ,
+   WR_GETDATA0 = 5'h2 ,
+   WR_GETDATA1 = 5'h4 ,
+   WR_WRITE    = 5'h8 ,
+   WR_RESPONSE = 5'h10 
 } JtagAxiWrSt ;
 
 logic [31:0]   AwAddr;
 logic [0:0]    AwId;
 logic          AwReady, WReady;
 logic [127:0]  lg_WrData;
+logic          lg_WrEn;
+logic [3:0]    WrDataDelayCntr;
 
 logic          BValid;
 logic [1:0]    BResp;
@@ -215,7 +218,7 @@ always_ff @(posedge clk or negedge rst_n) begin : proc_Wr
       WR_GETDATA1: begin
          if(m_axi_wvalid) begin
             if (m_axi_wlast)
-               JtagAxiWrSt       <= WRITE;
+               JtagAxiWrSt       <= WR_WRITE;
             else
                BResp          <= `DECERR;
 
@@ -239,7 +242,7 @@ always_ff @(posedge clk or negedge rst_n) begin : proc_Wr
             end else begin
                WrDataDelayCntr   <= WrDataDelayCntr +1 ;
                lg_WrEn           <= 0;
-               JtagAxiWrSt       <= RESPONSE ;
+               JtagAxiWrSt       <= WR_RESPONSE ;
                // initiate the next state
                BValid            <= 1;
                BId               <= AwId;
