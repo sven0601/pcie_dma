@@ -36,6 +36,7 @@ end
 
 always_comb begin : proc_StateNxt
    lg_DataValid = 1'h0;
+   StateNxt     = State;
    case (State)
       RESET : begin
          lg_DataValid = 1'h0;
