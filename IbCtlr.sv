@@ -23,26 +23,7 @@ module IbCtlr  (
    input    m_axis_h2c_tlast_0 ,
    input    m_axis_h2c_tvalid_0 ,
    output   m_axis_h2c_tready_0 ,
-   input   [7:0] m_axis_h2c_tkeep_0 ,
-   output  [31:0] m_axi_lite_araddr ,
-   output  [2:0] m_axi_lite_arprot ,
-   input    m_axi_lite_arready ,
-   output   m_axi_lite_arvalid ,
-   output  [31:0] m_axi_lite_awaddr ,
-   output  [2:0] m_axi_lite_awprot ,
-   input    m_axi_lite_awready ,
-   output   m_axi_lite_awvalid ,
-   output   m_axi_lite_bready ,
-   input   [1:0] m_axi_lite_bresp ,
-   input    m_axi_lite_bvalid ,
-   input   [31:0] m_axi_lite_rdata ,
-   output   m_axi_lite_rready ,
-   input   [1:0] m_axi_lite_rresp ,
-   input    m_axi_lite_rvalid ,
-   output  [31:0] m_axi_lite_wdata ,
-   input    m_axi_lite_wready ,
-   output  [3:0] m_axi_lite_wstrb ,
-   output   m_axi_lite_wvalid 
+   input   [7:0] m_axis_h2c_tkeep_0 
 ) ;
 
 //=======START DECLARING WIRES ================================================//

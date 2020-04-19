@@ -41,25 +41,6 @@ wire  m_axis_h2c_0_tlast ;
 wire  m_axis_h2c_0_tvalid ;
 wire  m_axis_h2c_0_tready ;
 wire [7:0] m_axis_h2c_0_tkeep ;
-wire [31:0] m_axi_lite_araddr ;
-wire [2:0] m_axi_lite_arprot ;
-wire  m_axi_lite_arready ;
-wire  m_axi_lite_arvalid ;
-wire [31:0] m_axi_lite_awaddr ;
-wire [2:0] m_axi_lite_awprot ;
-wire  m_axi_lite_awready ;
-wire  m_axi_lite_awvalid ;
-wire  m_axi_lite_bready ;
-wire [1:0] m_axi_lite_bresp ;
-wire  m_axi_lite_bvalid ;
-wire [31:0] m_axi_lite_rdata ;
-wire  m_axi_lite_rready ;
-wire [1:0] m_axi_lite_rresp ;
-wire  m_axi_lite_rvalid ;
-wire [31:0] m_axi_lite_wdata ;
-wire  m_axi_lite_wready ;
-wire [3:0] m_axi_lite_wstrb ;
-wire  m_axi_lite_wvalid ;
 wire [7:0] IbDataValid ;
 wire [7:0] IbRamValid ;
 wire [127:0] IbWrData ;
@@ -130,26 +111,7 @@ xdma_0  m_dma (
    .m_axis_h2c_0_tlast ( m_axis_h2c_0_tlast ) ,
    .m_axis_h2c_0_tvalid ( m_axis_h2c_0_tvalid ) ,
    .m_axis_h2c_0_tready ( m_axis_h2c_0_tready ) ,
-   .m_axis_h2c_0_tkeep ( m_axis_h2c_0_tkeep ) ,
-   .m_axi_lite_araddr ( m_axi_lite_araddr ) ,
-   .m_axi_lite_arprot ( m_axi_lite_arprot ) ,
-   .m_axi_lite_arready ( m_axi_lite_arready ) ,
-   .m_axi_lite_arvalid ( m_axi_lite_arvalid ) ,
-   .m_axi_lite_awaddr ( m_axi_lite_awaddr ) ,
-   .m_axi_lite_awprot ( m_axi_lite_awprot ) ,
-   .m_axi_lite_awready ( m_axi_lite_awready ) ,
-   .m_axi_lite_awvalid ( m_axi_lite_awvalid ) ,
-   .m_axi_lite_bready ( m_axi_lite_bready ) ,
-   .m_axi_lite_bresp ( m_axi_lite_bresp ) ,
-   .m_axi_lite_bvalid ( m_axi_lite_bvalid ) ,
-   .m_axi_lite_rdata ( m_axi_lite_rdata ) ,
-   .m_axi_lite_rready ( m_axi_lite_rready ) ,
-   .m_axi_lite_rresp ( m_axi_lite_rresp ) ,
-   .m_axi_lite_rvalid ( m_axi_lite_rvalid ) ,
-   .m_axi_lite_wdata ( m_axi_lite_wdata ) ,
-   .m_axi_lite_wready ( m_axi_lite_wready ) ,
-   .m_axi_lite_wstrb ( m_axi_lite_wstrb ) ,
-   .m_axi_lite_wvalid ( m_axi_lite_wvalid ) 
+   .m_axis_h2c_0_tkeep ( m_axis_h2c_0_tkeep ) 
 ) ;
 
 IbCtlr  IbCtlr (
@@ -172,26 +134,7 @@ IbCtlr  IbCtlr (
    .m_axis_h2c_tlast_0 ( m_axis_h2c_0_tlast ) ,
    .m_axis_h2c_tvalid_0 ( m_axis_h2c_0_tvalid ) ,
    .m_axis_h2c_tready_0 ( m_axis_h2c_0_tready ) ,
-   .m_axis_h2c_tkeep_0 ( m_axis_h2c_0_tkeep ) ,
-   .m_axi_lite_araddr ( m_axi_lite_araddr ) ,
-   .m_axi_lite_arprot ( m_axi_lite_arprot ) ,
-   .m_axi_lite_arready ( m_axi_lite_arready ) ,
-   .m_axi_lite_arvalid ( m_axi_lite_arvalid ) ,
-   .m_axi_lite_awaddr ( m_axi_lite_awaddr ) ,
-   .m_axi_lite_awprot ( m_axi_lite_awprot ) ,
-   .m_axi_lite_awready ( m_axi_lite_awready ) ,
-   .m_axi_lite_awvalid ( m_axi_lite_awvalid ) ,
-   .m_axi_lite_bready ( m_axi_lite_bready ) ,
-   .m_axi_lite_bresp ( m_axi_lite_bresp ) ,
-   .m_axi_lite_bvalid ( m_axi_lite_bvalid ) ,
-   .m_axi_lite_rdata ( m_axi_lite_rdata ) ,
-   .m_axi_lite_rready ( m_axi_lite_rready ) ,
-   .m_axi_lite_rresp ( m_axi_lite_rresp ) ,
-   .m_axi_lite_rvalid ( m_axi_lite_rvalid ) ,
-   .m_axi_lite_wdata ( m_axi_lite_wdata ) ,
-   .m_axi_lite_wready ( m_axi_lite_wready ) ,
-   .m_axi_lite_wstrb ( m_axi_lite_wstrb ) ,
-   .m_axi_lite_wvalid ( m_axi_lite_wvalid ) 
+   .m_axis_h2c_tkeep_0 ( m_axis_h2c_0_tkeep ) 
 ) ;
 
 ObCtlr  ObCtlr (
