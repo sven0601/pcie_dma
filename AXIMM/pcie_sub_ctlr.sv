@@ -539,7 +539,7 @@ logic [31:0] ObPtrNxt ;
 
 
 
-`define INIT_IB_REGION  64'h2000
+`define INIT_IB_REGION  64'h1000
 `define NEXT_IB_REGION  64'h0
 `define FINAL_IB_REGION 64'h10
 
@@ -668,15 +668,24 @@ always_comb begin : proc_IB_Ptr
                //
                RdRqValid_Nxt = 1;
                RdRqAddr_Nxt  = IbPtrNxt;
+
+               // FIFO interface
+               IbAddrNxt = '1;
             end else begin
                CtlIbSt_Nxt = IDLE;
+
+               //
+               RdRqValid_Nxt = 0;
             end
          end
-         else if (RdRqReady & RdRqErr) begin
-            CtlIbSt_Nxt = IDLE;
-         end else begin
+         else /*if (RdRqReady & RdRqErr)*/ begin
+            CtlIbSt_Nxt = LOAD_PTR;
+
+            RdRqValid_Nxt = 1;
+            RdRqAddr_Nxt  = `FINAL_IB_REGION;
+         end /*else begin
             CtlIbSt_Nxt = CtlIbSt ;
-         end
+         end*/
       end
       WRT_FIFO :begin
          if (RdRqReady & ~RdRqErr) begin
@@ -684,7 +693,7 @@ always_comb begin : proc_IB_Ptr
             IbAddrNxt = IbAddr + 1;
             FFWrEnNxt   = 1;
 
-            if (IbDataNxt == 'h63) begin// 99
+            if (IbAddrNxt == 'h64) begin// 100
                CtlIbSt_Nxt = UPDATE_PTR;
 
                //
@@ -715,17 +724,19 @@ always_comb begin : proc_IB_Ptr
          end
       end
       UPDATE_PTR : begin
+
          if (WrRqReady  & ~WrRqErr) begin
             CtlIbSt_Nxt = WAIT_DONE;
             WrRqValid_Nxt = 0;
 
+            IbPtrNxt_Nxt[11:0]  = '0 ;
             if (IbPtrNxt[15:12] == 8'h7) begin
                IbPtrNxt_Nxt[15:12] = 8'h0;
             end else begin
                IbPtrNxt_Nxt[15:12] = IbPtrNxt[15:12] + 8'h1;
             end
          end
-         else if (WrRqReady  & WrRqErr) begin
+         /*else if (WrRqReady  & WrRqErr) begin
             CtlIbSt_Nxt = UPDATE_PTR;
 
             WrRqValid_Nxt = 1;
@@ -738,7 +749,7 @@ always_comb begin : proc_IB_Ptr
             end else begin
                WrRqData_Nxt[15:12] = IbPtrNxt[15:12] + 8'h1;
             end
-         end else begin
+         end */else begin
             CtlIbSt_Nxt = UPDATE_PTR;
 
             WrRqValid_Nxt = 1;
