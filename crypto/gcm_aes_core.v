@@ -294,7 +294,8 @@ always@ (posedge clk or negedge rstn) begin
     end
     else if (next_wr_tag_flag) begin
 	    gcm_aes_data_output      <= next_Tag_data;
-      gcm_aes_data_output_size <= aad_size;
+      //gcm_aes_data_output_size <= aad_size;
+      gcm_aes_data_output_size <= 4'd15;
     end
     else begin
       gcm_aes_data_output_size <= pre_gcm_aes_data_output_size;

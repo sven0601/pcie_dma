@@ -14,13 +14,12 @@
 //=======================================================================
 
 module top_gcm_aes_128(clk ,rstn ,
-ib_ipsec_valid, 
-ob_ipsec_valid,
-encrypt_ena,
+ibDataValid, 
+obSRAMValid,
 ib_rd_data,
 // output
-ib_pcie_valid,
-ob_pcie_valid,
+ibSRAMValid ,
+obDataValid,
 ib_rd_en,
 ob_wr_en,
 ib_rd_addr,
@@ -28,30 +27,30 @@ ob_wr_addr,
 ob_wr_data);
 
 parameter DATA_WIDTH = 128;
-
 parameter INIT    = 4'b0000;
 parameter RD_INFO = 4'b0001;
-parameter RD_KEY1 = 4'b0010;
-parameter RD_KEY2 = 4'b0011;
-parameter RD_IV   = 4'b0100;
-parameter RD_AAD  = 4'b0101;
-parameter RD_DATA = 4'b0110;
-parameter WR_DATA = 4'b0111;
-parameter WR_TAG  = 4'b1000;
-parameter WR_INFO = 4'b1001;
-parameter WAIT    = 4'b1010;
-parameter DONE    = 4'b1011;
+parameter RD_TAG  = 4'b0010;
+parameter RD_KEY1 = 4'b0011;
+parameter RD_KEY2 = 4'b0100;
+parameter RD_IV   = 4'b0101;
+parameter RD_AAD  = 4'b0110;
+parameter RD_DATA = 4'b0111;
+parameter WR_DATA = 4'b1000;
+parameter WR_TAG  = 4'b1001;
+parameter WR_INFO = 4'b1010;
+parameter WAIT    = 4'b1011;
+parameter DONE    = 4'b1100;
+
 
 input clk;
 input rstn;
-input ib_ipsec_valid;
-input ob_ipsec_valid;
+input ibDataValid;
+input obSRAMValid;
 input ib_rd_en;
-input encrypt_ena;
 input [DATA_WIDTH-1:0] ib_rd_data;
 
-output ib_pcie_valid;
-output ob_pcie_valid;
+output ibSRAMValid ;
+output obDataValid;
 output ob_wr_en;
 output [7:0] ib_rd_addr;
 output [7:0] ob_wr_addr;
@@ -60,6 +59,8 @@ output [DATA_WIDTH-1:0] ob_wr_data;
 reg  [DATA_WIDTH-1:0] gcm_aes_data_input;
 reg  [DATA_WIDTH-1:0] info_data;
 reg  [DATA_WIDTH-1:0] info_data_next;
+reg  [DATA_WIDTH-1:0] tag_ah_data;
+reg  [DATA_WIDTH-1:0] tag_ah_data_next;
 reg  [DATA_WIDTH-1:0] key_data_1;
 reg  [DATA_WIDTH-1:0] key_data_1_pre;
 reg  [DATA_WIDTH-1:0] key_data_2;
@@ -69,6 +70,7 @@ wire [DATA_WIDTH-1:0] ib_rd_data;
 reg  [DATA_WIDTH-1:0] ob_wr_data;
 wire [255:0] key_data;
 wire [1:0] leng_key;
+wire encrypt_ena;
 
 reg  [3:0] state;
 reg  [3:0] next_state;
@@ -89,11 +91,11 @@ reg  [7:0] ob_wr_addr_next;
 
 wire clk;
 wire rstn;
-wire ib_ipsec_valid;
-wire ob_ipsec_valid;
+wire ibDataValid;
+wire obSRAMValid;
 
 wire  ena_aes;
-reg  ib_ipsec_valid_d1;
+reg  ibDataValid_d1;
 wire is_data_not_ready;
 wire rd_data_flag;
 wire wr_data_flag;
@@ -116,13 +118,13 @@ reg  iv_ena;
 reg  aad_msg_ena;
 reg  gcm_aes_data_input_type;
 reg  is_last_word;
-reg  ib_pcie_valid;
-reg  ob_pcie_valid;
+reg  ibSRAMValid ;
+reg  obDataValid;
 wire ob_wr_en;
 wire ib_rd_en;
 
 assign rd_data_flag = ~is_data_not_ready;
-assign ena_aes = ~ib_ipsec_valid_d1 & ib_ipsec_valid;
+assign ena_aes = ~ibDataValid_d1 & ibDataValid;
 assign ib_rd_en = 1'b1;
 
 //  start design
@@ -147,6 +149,9 @@ always@ (*) begin
 			end
 		end
 		RD_INFO:begin
+			next_state = RD_TAG;
+		end
+		RD_TAG:begin
 			next_state = RD_KEY1;
 		end
 		RD_KEY1:begin
@@ -207,7 +212,7 @@ always@ (*) begin
 			end
 		end
 		WAIT:begin
-			if (ob_ipsec_valid) begin
+			if (obSRAMValid) begin
 				next_state = DONE;
 			end
 			else begin
@@ -234,14 +239,15 @@ always@ (*) begin
       key_ena      = 1'b0;
       iv_ena       = 1'b0;
       aad_msg_ena  = 1'b0;
-      ib_pcie_valid = 1'b1;
-      ob_pcie_valid = 1'b0;
+      ibSRAMValid  = 1'b1;
+      obDataValid = 1'b0;
       gcm_aes_data_input_type = 1'b0;
       gcm_aes_data_input_size = 4'd0;
       gcm_aes_data_input  = 128'd0;
       key_data_1          = 128'd0;
       key_data_2          = 128'd0;
       info_data_next      = 128'd0;	
+      tag_ah_data_next    = 128'd0;	
 			ib_rd_addr_next = 8'd1;
 			ob_wr_addr_next = 8'd0;
       leng_msg_next = 11'd0;
@@ -252,15 +258,35 @@ always@ (*) begin
       key_ena      = 1'b0;
       iv_ena       = 1'b0;
       aad_msg_ena  = 1'b0;
-      ib_pcie_valid = 1'b0;
-      ob_pcie_valid = 1'b0;
+      ibSRAMValid  = 1'b0;
+      obDataValid = 1'b0;
       gcm_aes_data_input_type = 1'b0;
       gcm_aes_data_input_size = 4'd0;
       gcm_aes_data_input  = 128'd0;
       key_data_1          = 128'd0;
       key_data_2          = 128'd0;
       info_data_next      = ib_rd_data;	
+      tag_ah_data_next    = 128'd0;	
 			ib_rd_addr_next = 8'd2;
+			ob_wr_addr_next = 8'd0;
+      leng_msg_next = 11'd0;
+      leng_ct_next  = 11'd0;
+      tag_size_next = 4'd0;
+		end
+		RD_TAG:begin
+      key_ena      = 1'b0;
+      iv_ena       = 1'b0;
+      aad_msg_ena  = 1'b0;
+      ibSRAMValid  = 1'b0;
+      obDataValid = 1'b0;
+      gcm_aes_data_input_type = 1'b0;
+      gcm_aes_data_input_size = 4'd0;
+      gcm_aes_data_input  = 128'd0;
+      key_data_1          = 128'd0;
+      key_data_2          = 128'd0;
+      info_data_next      = info_data;	
+      tag_ah_data_next    = ib_rd_data;	
+			ib_rd_addr_next = 8'd3;
 			ob_wr_addr_next = 8'd0;
       leng_msg_next = 11'd0;
       leng_ct_next  = 11'd0;
@@ -270,15 +296,16 @@ always@ (*) begin
       key_ena      = 1'b0;
       iv_ena       = 1'b0;
       aad_msg_ena  = 1'b0;
-      ib_pcie_valid = 1'b0;
-      ob_pcie_valid = 1'b0;
+      ibSRAMValid  = 1'b0;
+      obDataValid = 1'b0;
       gcm_aes_data_input_type = 1'b0;
       gcm_aes_data_input_size = 4'd0;
       gcm_aes_data_input  = 128'd0;
       key_data_1          = ib_rd_data;	
       key_data_2          = 128'd0;
       info_data_next      = info_data;	
-			ib_rd_addr_next = 8'd3;
+      tag_ah_data_next    = tag_ah_data;	
+			ib_rd_addr_next = 8'd4;
 			ob_wr_addr_next = 8'd0;
       leng_msg_next = 11'd0;
       leng_ct_next  = 11'd0;
@@ -288,15 +315,16 @@ always@ (*) begin
       key_ena      = 1'b1;
       iv_ena       = 1'b0;
       aad_msg_ena  = 1'b0;
-      ib_pcie_valid = 1'b0;
-      ob_pcie_valid = 1'b0;
+      ibSRAMValid  = 1'b0;
+      obDataValid = 1'b0;
       gcm_aes_data_input_type = 1'b0;
       gcm_aes_data_input_size = 4'd0;
       gcm_aes_data_input  = 128'd0;
       key_data_1          = key_data_1_pre;
       key_data_2          = ib_rd_data;	
       info_data_next      = info_data;	
-		  ib_rd_addr_next = 8'd4;
+      tag_ah_data_next    = tag_ah_data;	
+		  ib_rd_addr_next = 8'd5;
 			ob_wr_addr_next = 8'd0;
       leng_msg_next = 11'd0;
       leng_ct_next  = 11'd0;
@@ -306,19 +334,20 @@ always@ (*) begin
       key_ena      = 1'b0;
       iv_ena       = 1'b1;
       aad_msg_ena  = 1'b0;
-      ib_pcie_valid = 1'b0;
-      ob_pcie_valid = 1'b0;
+      ibSRAMValid  = 1'b0;
+      obDataValid = 1'b0;
       gcm_aes_data_input_type = 1'b0;
       gcm_aes_data_input_size = 4'd0;
       gcm_aes_data_input  = ib_rd_data;
       key_data_1          = key_data_1_pre;
       key_data_2          = key_data_2_pre;
       info_data_next      = info_data;	
+      tag_ah_data_next    = tag_ah_data;	
 			if (rd_data_flag) begin
-			 	ib_rd_addr_next = 8'd5;
+			 	ib_rd_addr_next = 8'd6;
 			end
 			else begin 
-			 	ib_rd_addr_next = 8'd4;
+			 	ib_rd_addr_next = 8'd5;
 			end
 			ob_wr_addr_next = 8'd0;
       leng_msg_next = 11'd0;
@@ -329,15 +358,16 @@ always@ (*) begin
       key_ena      = 1'b0;
       iv_ena       = 1'b0;
       aad_msg_ena  = 1'b1;
-      ib_pcie_valid = 1'b0;
-      ob_pcie_valid = 1'b0;
+      ibSRAMValid  = 1'b0;
+      obDataValid = 1'b0;
       gcm_aes_data_input_type = 1'b1;
       gcm_aes_data_input_size = info_data[7:4] - 1;
       gcm_aes_data_input  = ib_rd_data;
       key_data_1          = key_data_1_pre;
       key_data_2          = key_data_2_pre;
       info_data_next      = info_data;	
-			ib_rd_addr_next = 8'd6;
+      tag_ah_data_next    = tag_ah_data;	
+			ib_rd_addr_next = 8'd7;
 			ob_wr_addr_next = 8'd1;
 			leng_msg_next = info_data[18:8];
       leng_ct_next  = 11'd0;
@@ -347,14 +377,15 @@ always@ (*) begin
       key_ena      = 1'b0;
       iv_ena       = 1'b0;
       aad_msg_ena  = 1'b1;
-      ib_pcie_valid = 1'b0;
-      ob_pcie_valid = 1'b0;
+      ibSRAMValid  = 1'b0;
+      obDataValid = 1'b0;
       gcm_aes_data_input_type = 1'b0;
       gcm_aes_data_input_size = msg_size;
       gcm_aes_data_input  = ib_rd_data;
       key_data_1          = key_data_1_pre;
       key_data_2          = key_data_2_pre;
       info_data_next      = info_data;	
+      tag_ah_data_next    = tag_ah_data;	
 			ib_rd_addr_next = ib_rd_addr;
 			ob_wr_addr_next = ob_wr_addr;
 			leng_msg_next = leng_msg;
@@ -365,14 +396,15 @@ always@ (*) begin
       key_ena      = 1'b0;
       iv_ena       = 1'b0;
       aad_msg_ena  = 1'b0;
-      ib_pcie_valid = 1'b0;
-      ob_pcie_valid = 1'b0;
+      ibSRAMValid  = 1'b0;
+      obDataValid = 1'b0;
       gcm_aes_data_input_type = 1'b0;
       gcm_aes_data_input_size = msg_size;
       gcm_aes_data_input  = ib_rd_data;
       key_data_1          = key_data_1_pre;
       key_data_2          = key_data_2_pre;
       info_data_next      = info_data;	
+      tag_ah_data_next    = tag_ah_data;	
 			if (rd_data_flag) begin
 			 	ib_rd_addr_next = ib_rd_addr + 1;
 				leng_msg_next = leng_msg - 16;
@@ -395,14 +427,15 @@ always@ (*) begin
       key_ena      = 1'b0;
       iv_ena       = 1'b0;
       aad_msg_ena  = 1'b0;
-      ib_pcie_valid = 1'b0;
-      ob_pcie_valid = 1'b0;
+      ibSRAMValid  = 1'b0;
+      obDataValid = 1'b0;
       gcm_aes_data_input_type = 1'b0;
       gcm_aes_data_input_size = msg_size;
       gcm_aes_data_input  = ib_rd_data;
       key_data_1          = key_data_1_pre;
       key_data_2          = key_data_2_pre;
       info_data_next      = info_data;	
+      tag_ah_data_next    = tag_ah_data;	
 			ib_rd_addr_next = ib_rd_addr;
 			if (wr_tag_flag_d1) begin
 				ob_wr_addr_next = ob_wr_addr + 1;
@@ -419,14 +452,15 @@ always@ (*) begin
       key_ena      = 1'b0;
       iv_ena       = 1'b0;
       aad_msg_ena  = 1'b0;
-      ib_pcie_valid = 1'b0;
-      ob_pcie_valid = 1'b0;
+      ibSRAMValid  = 1'b0;
+      obDataValid = 1'b0;
       gcm_aes_data_input_type = 1'b0;
       gcm_aes_data_input_size = 4'd0;
       gcm_aes_data_input  = 128'd0;
       key_data_1          = 128'd0;
       key_data_2          = 128'd0;
       info_data_next      = 128'd0;	
+      tag_ah_data_next    = tag_ah_data;	
 			ib_rd_addr_next = 8'd0;
 			if (wr_info_flag_d1) begin
 				ob_wr_addr_next = 8'd1;
@@ -443,14 +477,15 @@ always@ (*) begin
       key_ena      = 1'b0;
       iv_ena       = 1'b0;
       aad_msg_ena  = 1'b0;
-      ib_pcie_valid = 1'b0;
-      ob_pcie_valid = 1'b1;
+      ibSRAMValid  = 1'b0;
+      obDataValid = 1'b1;
       gcm_aes_data_input_type = 1'b0;
       gcm_aes_data_input_size = 4'd0;
       gcm_aes_data_input  = 128'd0;
       key_data_1          = 128'd0;
       key_data_2          = 128'd0;
       info_data_next      = 128'd0;	
+      tag_ah_data_next    = tag_ah_data;	
 			ib_rd_addr_next = 8'd1;
 			ob_wr_addr_next = 8'd0;
 			leng_msg_next = 11'd0;
@@ -462,14 +497,15 @@ always@ (*) begin
       key_ena      = 1'b0;
       iv_ena       = 1'b0;
       aad_msg_ena  = 1'b0;
-      ib_pcie_valid = 1'b1;
-      ob_pcie_valid = 1'b0;
+      ibSRAMValid  = 1'b1;
+      obDataValid = 1'b0;
       gcm_aes_data_input_type = 1'b0;
       gcm_aes_data_input_size = 4'd0;
       gcm_aes_data_input  = 128'd0;
       key_data_1          = 128'd0;
       key_data_2          = 128'd0;
       info_data_next      = 128'd0;	
+      tag_ah_data_next    = tag_ah_data;	
 			ib_rd_addr_next = 8'd1;
 			ob_wr_addr_next = 8'd0;
 			leng_msg_next = 11'd0;
@@ -481,14 +517,15 @@ always@ (*) begin
       key_ena      = 1'b0;
       iv_ena       = 1'b0;
       aad_msg_ena  = 1'b0;
-      ib_pcie_valid = 1'b0;
-      ob_pcie_valid = 1'b0;
+      ibSRAMValid  = 1'b0;
+      obDataValid = 1'b0;
       gcm_aes_data_input_type = 1'b0;
       gcm_aes_data_input_size = 4'd0;
       gcm_aes_data_input  = 128'd0;
       key_data_1          = 128'd0;
       key_data_2          = 128'd0;
       info_data_next      = 128'd0;	
+      tag_ah_data_next    = 128'd0;	
 			ib_rd_addr_next = 8'd0;
 			ob_wr_addr_next = 8'd0;
 			leng_msg_next = 11'd0;
@@ -520,59 +557,61 @@ end
 
 always@ (posedge clk or negedge rstn) begin
   if (!rstn) begin 
-  	leng_msg <= 11'd0;
-  	leng_ct  <= 11'd0;
-    tag_size <= 4'd0;
-  	ib_rd_addr <= 8'b0;
-    ob_wr_addr <= 8'b0;
-    key_data_1_pre <= 128'd0;
-    key_data_2_pre <= 128'd0;
-    info_data    <= 128'd0;
-    ib_ipsec_valid_d1 <= 1'b0;
+  	leng_msg          <= 11'd0;
+  	leng_ct           <= 11'd0;
+    tag_size          <= 4'd0;
+  	ib_rd_addr        <= 8'b0;
+    ob_wr_addr        <= 8'b0;
+    key_data_1_pre    <= 128'd0;
+    key_data_2_pre    <= 128'd0;
+    info_data         <= 128'd0;
+    tag_ah_data       <= 128'd0;
+    ibDataValid_d1 <= 1'b0;
   
-    wr_tag_flag_d1 <= 1'b0;
-    wr_tag_flag_d2 <= 1'b0;
-    wr_tag_flag_d3 <= 1'b0;
-    wr_tag_flag_d4 <= 1'b0;
+    wr_tag_flag_d1    <= 1'b0;
+    wr_tag_flag_d2    <= 1'b0;
+    wr_tag_flag_d3    <= 1'b0;
+    wr_tag_flag_d4    <= 1'b0;
   
-    wr_data_flag_d1 <= 1'b0;
-    wr_data_flag_d2 <= 1'b0;
-    wr_data_flag_d3 <= 1'b0;
-    wr_data_flag_d4 <= 1'b0;
+    wr_data_flag_d1   <= 1'b0;
+    wr_data_flag_d2   <= 1'b0;
+    wr_data_flag_d3   <= 1'b0;
+    wr_data_flag_d4   <= 1'b0;
   
-    wr_info_flag    <= 1'b0;
-    wr_info_flag_d1 <= 1'b0;
-    wr_info_flag_d2 <= 1'b0;
-    wr_info_flag_d3 <= 1'b0;
-    wr_info_flag_d4 <= 1'b0;
+    wr_info_flag      <= 1'b0;
+    wr_info_flag_d1   <= 1'b0;
+    wr_info_flag_d2   <= 1'b0;
+    wr_info_flag_d3   <= 1'b0;
+    wr_info_flag_d4   <= 1'b0;
     
   end
   else begin 
-  	leng_msg <= leng_msg_next;
-  	leng_ct  <= leng_ct_next;
-    tag_size <= tag_size_next;
-  	ib_rd_addr <= ib_rd_addr_next;
-    ob_wr_addr <= ob_wr_addr_next;
-    key_data_1_pre <= key_data_1;
-    key_data_2_pre <= key_data_2;
-    info_data <= info_data_next;
-    ib_ipsec_valid_d1 <= ib_ipsec_valid;
+  	leng_msg          <= leng_msg_next;
+  	leng_ct           <= leng_ct_next;
+    tag_size          <= tag_size_next;
+  	ib_rd_addr        <= ib_rd_addr_next;
+    ob_wr_addr        <= ob_wr_addr_next;
+    key_data_1_pre    <= key_data_1;
+    key_data_2_pre    <= key_data_2;
+    info_data         <= info_data_next;
+    tag_ah_data       <= tag_ah_data_next;
+    ibDataValid_d1 <= ibDataValid;
   
-    wr_tag_flag_d1 <= wr_tag_flag;
-    wr_tag_flag_d2 <= wr_tag_flag_d1;
-    wr_tag_flag_d3 <= wr_tag_flag_d2;
-    wr_tag_flag_d4 <= wr_tag_flag_d3;
+    wr_tag_flag_d1    <= wr_tag_flag;
+    wr_tag_flag_d2    <= wr_tag_flag_d1;
+    wr_tag_flag_d3    <= wr_tag_flag_d2;
+    wr_tag_flag_d4    <= wr_tag_flag_d3;
   
-    wr_data_flag_d1 <= wr_data_flag;
-    wr_data_flag_d2 <= wr_data_flag_d1;
-    wr_data_flag_d3 <= wr_data_flag_d2;
-    wr_data_flag_d4 <= wr_data_flag_d3;
+    wr_data_flag_d1   <= wr_data_flag;
+    wr_data_flag_d2   <= wr_data_flag_d1;
+    wr_data_flag_d3   <= wr_data_flag_d2;
+    wr_data_flag_d4   <= wr_data_flag_d3;
   
-    wr_info_flag <= wr_tag_flag_d4;
-    wr_info_flag_d1 <= wr_info_flag;
-    wr_info_flag_d2 <= wr_info_flag_d1;
-    wr_info_flag_d3 <= wr_info_flag_d2;
-    wr_info_flag_d4 <= wr_info_flag_d3;
+    wr_info_flag      <= wr_tag_flag_d4;
+    wr_info_flag_d1   <= wr_info_flag;
+    wr_info_flag_d2   <= wr_info_flag_d1;
+    wr_info_flag_d3   <= wr_info_flag_d2;
+    wr_info_flag_d4   <= wr_info_flag_d3;
     
   end
 end
@@ -609,6 +648,7 @@ always@ (*) begin
 end
 
 assign leng_key = info_data[1:0];
+assign encrypt_ena = info_data[19];
 assign key_data = {key_data_1,key_data_2};
 
 gcm_aes_core gcm_aes_1 (.clk(clk),.rstn(rstn), 

@@ -417,6 +417,19 @@ module pcie_sub_ctlr (
    output logic  [127:0]   WrRqData  ,
    input                   WrRqReady ,
    input                   WrRqErr   ,
+
+   // Ib FIFO
+   output        [127:0]   IbDataOut ,
+   input         [7:0]     IbAddrOut ,
+   input                   IbRdEn    ,
+
+   input                   ob_wr_en,
+   input         [7:0]     ObAddr,
+   input         [127:0]   ObData,
+
+   output logic            IbDataValid,
+   input                   IbRamValid,
+
 );
 
 
@@ -436,7 +449,10 @@ logic [31:0] ObPtrNxt ;
 typedef enum logic[3:0] {
    IDLE     = 'h0,
    LOAD_PTR = 'h1,
-   WRT_PTR  = 'h2 
+   WRT_PTR  = 'h2,
+   WRT_FIFO = 'h4,
+   RD_FIFO  = 'h8,
+   WAIT_DONE = 'h10
 } CtlIbState ;
 
 CtlIbState CtlIbSt, CtlIbSt_Nxt ;
@@ -445,6 +461,21 @@ CtlIbState CtlIbSt, CtlIbSt_Nxt ;
 logic          WrRqValid_Nxt ;
 logic  [63:0]  WrRqAddr_Nxt ;
 logic  [127:0] WrRqData_Nxt ;
+
+
+logic IbDataValidNxt;
+
+
+
+logic [127:0]  IbDataNxt;
+logic [7:0]    IbAddrNxt;
+logic          FFWrEnNxt;
+
+logic [128-1:0]  IbData  ,
+logic [7:0]      IbAddr  ,
+logic            ib_wr_ena  ,
+
+
 
 
 always_ff @(posedge clk) begin : proc_CtlIbSt
@@ -460,6 +491,12 @@ always_ff @(posedge clk) begin : proc_CtlIbSt
       WrRqValid <= '0 ;
       WrRqAddr  <= '0 ;
       WrRqData  <= '0 ;
+
+      IbData    <= '0 ;
+      IbAddr    <= '0;
+      ib_wr_ena    <= '0;
+
+      IbDataValid <= 0;
    end else begin
       CtlIbSt   <= CtlIbSt_Nxt;
       
@@ -472,9 +509,14 @@ always_ff @(posedge clk) begin : proc_CtlIbSt
       WrRqValid <= WrRqValid_Nxt ;
       WrRqAddr  <= WrRqAddr_Nxt ;
       WrRqData  <= WrRqData_Nxt ;
+
+      IbData    <= IbDataNxt ;
+      IbAddr    <= IbAddrNxt;
+      ib_wr_ena    <= FFWrEnNxt ;
+
+      IbDataValid <= IbDataValidNxt;
    end
 end
-
 
 always_comb begin : proc_IB_Ptr
    RdRqValid_Nxt  = 1'h0;
@@ -485,6 +527,15 @@ always_comb begin : proc_IB_Ptr
    WrRqData_Nxt   = WrRqData ;
    WrRqValid_Nxt  = 1'h0;
    WrRqAddr_Nxt   = WrRqAddr ;
+
+   RdRqAddr_Nxt   = RdRqAddr ;
+
+
+   FFWrEnNxt        = 0;
+   IbAddrNxt      = IbAddr;
+   IbDataNxt      = IbData;
+
+   IbDataValid    = 0;
 
    case (CtlIbSt)
       IDLE: begin
@@ -498,19 +549,11 @@ always_comb begin : proc_IB_Ptr
             IbPtrFn_Nxt = RdRqData[31:0] ;
 
             if (IbPtrFn_Nxt != IbPtrNxt) begin
-               CtlIbSt_Nxt = WRT_PTR;
+               CtlIbSt_Nxt = WRT_FIFO;
 
                //
-               WrRqValid_Nxt       = 1;
-               WrRqAddr_Nxt        = `NEXT_IB_REGION ;
-               WrRqData_Nxt[31:0]  = IbPtrNxt;
-
-               if (IbPtrNxt[19:16] == 4'h9) begin
-                  IbPtrNxt_Nxt[31:0]  = 32'h0002_0000;
-               end else begin
-                  IbPtrNxt_Nxt[19:16] = IbPtrNxt[19:16] + 4'h1 ;
-               end
-
+               RdRqValid_Nxt = 1;
+               RdRqAddr_Nxt  = IbPtrNxt;
             end else begin
                CtlIbSt_Nxt = IDLE;
             end
@@ -521,25 +564,151 @@ always_comb begin : proc_IB_Ptr
             CtlIbSt_Nxt = CtlIbSt ;
          end
       end
-      WRT_PTR :begin
-         WrRqValid_Nxt   = 1;
-         WrRqAddr_Nxt    = `NEXT_IB_REGION ;
-         WrRqData[31:0]  = IbPtrNxt;
+      WRT_FIFO :begin
+         if (RdRqReady & ~RdRqErr) begin
+            IbDataNxt = RdRqData[31:0] ;
+            IbAddrNxt = IbAddr + 1;
+            FFWrEnNxt   = 1;
 
-         if (WrRqReady & ~WrRqErr) begin
-            CtlIbSt_Nxt     = IDLE;
+            if (IbDataNxt == 'h63) begin// 99
+               CtlIbSt_Nxt = WAIT_DONE;
+            end else begin
+               CtlIbSt_Nxt = WRT_FIFO;
 
-            WrRqValid_Nxt   = 0;
-         end
-         else if (WrRqReady & WrRqErr) begin
-            CtlIbSt_Nxt = CtlIbSt ;
+               RdRqValid_Nxt = 1;
+               RdRqAddr_Nxt  = IbPtrNxt + 'h4;
+            end
          end else begin
-            CtlIbSt_Nxt = CtlIbSt ;
+            CtlIbSt_Nxt = WRT_FIFO;
+
+            IbDataNxt = IbData;
+            IbAddrNxt = IbAddr;
+            FFWrEnNxt   = 0;
+
+            RdRqValid_Nxt = 1;
+            RdRqAddr_Nxt  = IbPtrNxt ;
          end
+      end
+      WAIT_DONE: begin
+         IbDataValidNxt = 1;
       end
       default : CtlIbSt_Nxt = CtlIbSt;
    endcase
 end
 
+////////////////////
+// RAM
 
-endmodule
+ram m_ram_Ib_0 (
+   .WrEn   ( ib_wr_ena ) ,
+   .WrAddr ( IbAddr    ) ,
+   .WrData ( IbData    ) ,
+   .RdEn   ( IbRdEn    ) ,
+   .RdAddr ( IbAddrOut ) ,
+   .RdData ( IbDataOut ) ,
+
+   .clk    ( clk       ) ,
+   .rst_n  ( rst_n     )
+) ;
+
+
+ram m_ram_Ob_0 (
+   .clk    ( clk       ) ,
+   .rst_n  ( rst_n     ) ,
+   .WrEn   ( ob_wr_en  ) ,
+   .WrAddr ( ObAddr    ) ,
+   .WrData ( ObData    ) ,
+   .RdAddr ( ObAddrOut ) ,
+   .RdData ( ObDataOut )
+);
+
+
+
+endmodule : pcie_sub_ctlr
+
+
+
+module pcie_sub_ctlr_top (
+   input                   clk       ,
+   input                   rst_n     ,
+
+   // Controller signals
+   output logic            RdRqValid ,
+   output logic  [63:0]    RdRqAddr  ,
+   input         [127:0]   RdRqData  ,
+   input                   RdRqReady ,
+   input                   RdRqErr   ,
+
+   // Controller signals
+   output logic            WrRqValid ,
+   output logic  [63:0]    WrRqAddr  ,
+   output logic  [127:0]   WrRqData  ,
+   input                   WrRqReady ,
+   input                   WrRqErr   ,
+);
+
+
+wire   IbDataOut  ;
+wire   IbAddrOut  ;
+
+wire   IbDataValid ;
+wire   IbRamValid ;
+
+
+wire           ob_wr_en;
+wire [7:0]     ObAddr;
+wire [127:0]   ObData;
+
+
+pcie_sub_ctlr m_pcie_sub_ctlr (
+   .clk         (clk      ) ,
+   .rst_n       (rst_n    ) ,
+
+   .RdRqValid   (RdRqValid) ,
+   .RdRqAddr    (RdRqAddr ) ,
+   .RdRqData    (RdRqData ) ,
+   .RdRqReady   (RdRqReady) ,
+   .RdRqErr     (RdRqErr  ) ,
+
+   .WrRqValid   (WrRqValid) ,
+   .WrRqAddr    (WrRqAddr ) ,
+   .WrRqData    (WrRqData ) ,
+   .WrRqReady   (WrRqReady) ,
+   .WrRqErr     (WrRqErr  ) ,
+
+   .IbDataOut   (IbDataOut) ,
+   .IbAddrOut   (IbAddrOut) ,
+   .IbRdEn      (IbRdEn)
+
+   .ob_wr_en    (ob_wr_en) ,
+   .ObAddr      (ObAddr  ) ,
+   .ObData      (ObData  ) ,
+
+   .IbDataValid (IbDataValid) ,
+   .IbRamValid  (IbRamValid) ,
+);
+
+
+top_gcm_aes_128 m_top_gcm_aes_128_0(
+.clk         ( clk         ) ,
+.rstn        ( rst_n       ) ,
+.encrypt_ena ( 1           ) ,
+.ibSRAMValid ( IbRamValid  ) ,
+.ibDataValid ( IbDataValid ) ,
+.ib_rd_en    ( IbRdEn      ) ,
+.ib_rd_data  ( IbDataOut   ) ,
+.ib_rd_addr  ( IbAddrOut   ) ,
+// output
+.obSRAMValid ( ) ,
+.obDataValid ( ) ,
+.ob_wr_en    ( ) ,
+.ob_wr_addr  ( ) ,
+.ob_wr_data  ( )
+);
+
+
+
+
+
+
+endmodule : pcie_sub_ctlr_top
