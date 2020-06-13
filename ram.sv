@@ -10,6 +10,6 @@ module ram (
    input             rst_n  
 ) ;
 
-`include "ram_lib.svh"
+// `include "ram_lib.svh"
 
 endmodule
