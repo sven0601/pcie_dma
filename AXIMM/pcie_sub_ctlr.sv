@@ -593,7 +593,7 @@ end
 
 always_ff @(posedge clk) begin : proc_CtlIbSt
    if(~rst_n) begin
-      CtlIbSt  <= LOAD_PTR;
+      CtlIbSt  <= IDLE;
 
       IbPtrFn  <= '0;
       IbPtrNxt <= `INIT_IB_REGION;
