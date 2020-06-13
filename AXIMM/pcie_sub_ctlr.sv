@@ -565,7 +565,7 @@ logic  [127:0]    WrRqData_Nxt ;
 logic             IbDataValidNxt ;
 
 logic [127:0]     IbDataNxt;
-logic [31:0]       IbAddrNxt;
+logic [31:0]      IbAddrNxt;
 logic             FFWrEnNxt;
 
 logic [128-1:0]   IbData  ;
@@ -705,6 +705,8 @@ always_comb begin : proc_IB_Ptr
                end else begin
                   WrRqData_Nxt[15:12] = IbPtrNxt[15:12] + 8'h1;
                end
+
+               RdRqValid_Nxt = 0;
 
             end else begin
                CtlIbSt_Nxt = WRT_FIFO;
