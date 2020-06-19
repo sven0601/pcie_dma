@@ -830,15 +830,22 @@ always_comb begin : proc_IB_Ptr
       end
       WAIT_WR_PTR: begin
          ObRamValid_Nxt = 0;
+
          
          if (Cntr == `CNTR_MAX  ) begin
             CtlIbSt_Nxt = CHK_PTR;
 
             RdRqValid_Nxt = 1;
             RdRqAddr_Nxt  = `NEXT_OB_REGION;
+
+            ObRdEn_Nxt = 1;
+            ObAddrOut_Nxt = 0;
          end else begin
             RdRqValid_Nxt = 0;
             RdRqAddr_Nxt  = RdRqAddr ;
+
+            ObRdEn_Nxt = 0;
+            ObAddrOut_Nxt = 0;
          end
       end
       CHK_PTR: begin
@@ -853,16 +860,21 @@ always_comb begin : proc_IB_Ptr
                ) begin // wait for writing
                CtlIbSt_Nxt = WAIT_WR_PTR ;
 
+               ObRdEn_Nxt = 1;
+               ObAddrOut_Nxt = 0;
             end else begin
                CtlIbSt_Nxt = INI_WR_DATA;
 
-               ObRdEn_Nxt = 1;
+               ObRdEn_Nxt = 0;
                ObAddrOut_Nxt = 0;
             end
 
          end else begin
             RdRqValid_Nxt = 1;
             RdRqAddr_Nxt  = `NEXT_OB_REGION;
+
+            ObRdEn_Nxt = 0;
+            ObAddrOut_Nxt = 0;
          end
       end
       INI_WR_DATA: begin
