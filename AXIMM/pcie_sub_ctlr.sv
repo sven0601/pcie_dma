@@ -556,18 +556,18 @@ logic [31:0] ObPtrNxt, ObPtrNxt_Nxt ;
 
 
 typedef enum logic[11:0] {
-   IDLE       = 'h0,
-   LOAD_PTR   = 'h1,
-   WRT_PTR    = 'h2,
-   WRT_FIFO   = 'h4,
-   RD_FIFO    = 'h8,
-   WAIT_DONE  = 'h10,
-   UPDATE_PTR = 'h20,
-   WRT_DATA   = 'h40,
-   WRT_DTPTR  = 'h80,
-   WAIT_WR_PTR = 'h100,
-   CHK_PTR     = 'h200,
-   INI_WR_DATA = 'h400
+   IDLE        = 'h000,
+   LOAD_PTR    = 'h001,
+   WRT_PTR     = 'h002,
+   WRT_FIFO    = 'h004,
+   // RD_FIFO  = 'h008,
+   WAIT_DONE   = 'h008,
+   UPDATE_PTR  = 'h010,
+   WRT_DATA    = 'h020,
+   WRT_DTPTR   = 'h040,
+   WAIT_WR_PTR = 'h080,
+   CHK_PTR     = 'h100,
+   INI_WR_DATA = 'h200
 } CtlIbState ;
 
 
@@ -614,49 +614,49 @@ end
 
 always_ff @(posedge clk) begin : proc_CtlIbSt
    if(~rst_n) begin
-      CtlIbSt  <= IDLE;
+      CtlIbSt     <= IDLE;
 
-      IbPtrFn  <= '0;
-      IbPtrNxt <= `INIT_IB_REGION;
+      IbPtrFn     <= '0;
+      IbPtrNxt    <= `INIT_IB_REGION;
 
-      ObPtrFn  <= '0;
-      ObPtrNxt <= '0;
+      ObPtrFn     <= '0;
+      ObPtrNxt    <= '0;
       
-      RdRqValid <= '0 ;
-      RdRqAddr  <= '0 ;
+      RdRqValid   <= '0 ;
+      RdRqAddr    <= '0 ;
 
-      WrRqValid <= '0 ;
-      WrRqAddr  <= '0 ;
-      WrRqData  <= '0 ;
+      WrRqValid   <= '0 ;
+      WrRqAddr    <= '0 ;
+      WrRqData    <= '0 ;
 
-      IbData    <= '0 ;
-      IbAddr    <= '0;
-      IbWrEn    <= '0;
+      IbData      <= '0 ;
+      IbAddr      <= '0;
+      IbWrEn      <= '0;
 
       IbDataValid <= 0;
 
-      ObRdEn   <= '0;
-      ObAddrOut <= '0;
+      ObRdEn      <= '0;
+      ObAddrOut   <= '0;
 
    end else begin
-      CtlIbSt   <= CtlIbSt_Nxt;
+      CtlIbSt     <= CtlIbSt_Nxt;
       
-      IbPtrFn   <= IbPtrFn_Nxt  ;
-      IbPtrNxt  <= IbPtrNxt_Nxt ;
+      IbPtrFn     <= IbPtrFn_Nxt  ;
+      IbPtrNxt    <= IbPtrNxt_Nxt ;
 
-      ObPtrFn  <=  ObPtrFn_Nxt  ;
-      ObPtrNxt <=  ObPtrNxt_Nxt ;
+      ObPtrFn     <= ObPtrFn_Nxt  ;
+      ObPtrNxt    <= ObPtrNxt_Nxt ;
 
-      RdRqValid <= RdRqValid_Nxt ;
-      RdRqAddr  <= RdRqAddr_Nxt ;
+      RdRqValid   <= RdRqValid_Nxt ;
+      RdRqAddr    <= RdRqAddr_Nxt ;
 
-      WrRqValid <= WrRqValid_Nxt ;
-      WrRqAddr  <= WrRqAddr_Nxt ;
-      WrRqData  <= WrRqData_Nxt ;
+      WrRqValid   <= WrRqValid_Nxt ;
+      WrRqAddr    <= WrRqAddr_Nxt ;
+      WrRqData    <= WrRqData_Nxt ;
 
-      IbData    <= IbDataNxt ;
-      IbAddr    <= IbAddrNxt;
-      IbWrEn    <= IbWrEnNxt ;
+      IbData      <= IbDataNxt ;
+      IbAddr      <= IbAddrNxt;
+      IbWrEn      <= IbWrEnNxt ;
 
       IbDataValid <= IbDataValidNxt;
       ObRamValid  <= ObRamValid_Nxt;
@@ -736,7 +736,7 @@ always_comb begin : proc_IB_Ptr
       end
       WRT_FIFO :begin
          if (RdRqReady & ~RdRqErr) begin
-            IbDataNxt = RdRqData[31:0] ;
+            IbDataNxt = RdRqData[127:0] ;
             IbAddrNxt = IbAddr + 1;
             IbWrEnNxt   = 1;
 
@@ -831,7 +831,6 @@ always_comb begin : proc_IB_Ptr
       WAIT_WR_PTR: begin
          ObRamValid_Nxt = 0;
 
-         
          if (Cntr == `CNTR_MAX  ) begin
             CtlIbSt_Nxt = CHK_PTR;
 
@@ -865,8 +864,8 @@ always_comb begin : proc_IB_Ptr
             end else begin
                CtlIbSt_Nxt = INI_WR_DATA;
 
-               ObRdEn_Nxt = 0;
-               ObAddrOut_Nxt = 0;
+               ObRdEn_Nxt = 1;
+               ObAddrOut_Nxt = '0;
             end
 
          end else begin
@@ -880,14 +879,14 @@ always_comb begin : proc_IB_Ptr
       INI_WR_DATA: begin
          ObRamValid_Nxt = 0;
 
-         WrRqValid_Nxt = 1;
-         WrRqData_Nxt  = ObDataOut;
-         WrRqAddr_Nxt  = 0;
+         WrRqValid_Nxt  = 0;
+         WrRqData_Nxt   = ObDataOut;
+         WrRqAddr_Nxt   = 0;
 
-         CtlIbSt_Nxt   = WRT_DATA;
+         CtlIbSt_Nxt    = WRT_DATA;
 
-         ObRdEn_Nxt = 1;
-         ObAddrOut_Nxt = ObAddrOut + 'h1;
+         ObRdEn_Nxt     = 1;
+         ObAddrOut_Nxt  = ObAddrOut + 'h1;
       end
       WRT_DATA: begin
          ObRamValid_Nxt = 0;
