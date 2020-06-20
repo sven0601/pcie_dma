@@ -81,7 +81,7 @@ logic             WrRqValid_Nxt ;
 logic  [63:0]     WrRqAddr_Nxt ;
 logic  [127:0]    WrRqData_Nxt ;
 
-logic             IbDataValidNxt ;
+// logic             IbDataValidNxt ;
 
 logic [127:0]     IbDataNxt;
 logic [31:0]      IbAddrNxt;
@@ -98,8 +98,9 @@ wire [127:0]      ObDataOut;
 logic             RdRqValid_Nxt;
 logic [63:0]      RdRqAddr_Nxt;
 
-logic             ObRamValid_Nxt;
+// logic             ObRamValid_Nxt;
 
+logic             IbWrDone, ObRdDone;
 
 logic [COUNTER_LEN-1:0] Cntr;
 
@@ -138,7 +139,7 @@ always_ff @(posedge clk) begin : proc_CtlIbSt
       IbAddr      <= '0;
       IbWrEn      <= '0;
 
-      IbDataValid <= 0;
+      // IbDataValid <= 0;
 
       ObRdEn      <= '0;
       ObAddrOut   <= '0;
@@ -163,8 +164,8 @@ always_ff @(posedge clk) begin : proc_CtlIbSt
       IbAddr      <= IbAddrNxt;
       IbWrEn      <= IbWrEnNxt ;
 
-      IbDataValid <= IbDataValidNxt;
-      ObRamValid  <= ObRamValid_Nxt;
+      // IbDataValid <= IbDataValidNxt;
+      // ObRamValid  <= ObRamValid_Nxt;
 
       ObRdEn      <= ObRdEn_Nxt;
       ObAddrOut   <= ObAddrOut_Nxt;
@@ -197,9 +198,12 @@ always_comb begin : proc_IB_Ptr
    IbAddrNxt      = IbAddr;
    IbDataNxt      = IbData;
 
-   IbDataValidNxt = 0;
+   // IbDataValidNxt = 0;
 
-   ObRamValid_Nxt = 1;
+   // ObRamValid_Nxt = 1;
+
+   IbWrDone = 0;
+   ObRdDone = 0;
 
    case (CtlIbSt)
       IDLE: begin
@@ -245,8 +249,9 @@ always_comb begin : proc_IB_Ptr
             IbAddrNxt = IbAddr + 1;
             IbWrEnNxt   = 1;
 
-            if (IbAddrNxt == 32'h64) begin// 100
+            if (IbAddrNxt == 32'h64) begin // 100
                CtlIbSt_Nxt = UPDATE_PTR;
+               IbWrDone    = 1;
 
                //
                WrRqValid_Nxt = 1;
@@ -262,6 +267,7 @@ always_comb begin : proc_IB_Ptr
 
             end else begin
                CtlIbSt_Nxt = WRT_FIFO;
+               IbWrDone    = 0;
 
                RdRqValid_Nxt = 1;
                RdRqAddr_Nxt  = IbPtrNxt + 64'h10;
@@ -317,24 +323,24 @@ always_comb begin : proc_IB_Ptr
          end
       end
       WAIT_DONE: begin
-         if (IbRamValid & ObDataValid) begin
+         if (ObDataValid) begin
             CtlIbSt_Nxt = CHK_PTR;
 
-            IbDataValidNxt = 0;
+            // IbDataValidNxt = 0;
 
             RdRqValid_Nxt = 1;
             RdRqAddr_Nxt  = `NEXT_OB_REGION;
 
-            ObRamValid_Nxt = 0;
+            // ObRamValid_Nxt = 0;
          end else begin
             RdRqValid_Nxt  = 0;
 
-            IbDataValidNxt = 1;
-            ObRamValid_Nxt = 1;
+            // IbDataValidNxt = 1;
+            // ObRamValid_Nxt = 1;
          end
       end
       WAIT_WR_PTR: begin
-         ObRamValid_Nxt = 0;
+         // ObRamValid_Nxt = 0;
 
          if (Cntr == `CNTR_MAX  ) begin
             CtlIbSt_Nxt = CHK_PTR;
@@ -353,7 +359,7 @@ always_comb begin : proc_IB_Ptr
          end
       end
       CHK_PTR: begin
-         ObRamValid_Nxt = 0;
+         // ObRamValid_Nxt = 0;
 
          if (RdRqReady & ~RdRqErr) begin
             RdRqValid_Nxt = 0;
@@ -382,7 +388,7 @@ always_comb begin : proc_IB_Ptr
          end
       end
       INI_WR_DATA: begin
-         ObRamValid_Nxt = 0;
+         // ObRamValid_Nxt = 0;
 
          WrRqValid_Nxt  = 0;
          WrRqData_Nxt   = ObDataOut;
@@ -395,7 +401,7 @@ always_comb begin : proc_IB_Ptr
          ObAddrOut_Nxt  = ObAddrOut + 32'h1;
       end
       WRT_DATA: begin
-         ObRamValid_Nxt = 0;
+         // ObRamValid_Nxt = 0;
 
          if (WrRqReady & ~WrRqErr) begin
             if (ObAddrOut == 'h64) begin // 100
@@ -427,7 +433,7 @@ always_comb begin : proc_IB_Ptr
          end
       end
       WRT_DTPTR: begin
-         ObRamValid_Nxt = 0;
+         // ObRamValid_Nxt = 0;
 
          if (WrRqReady & ~WrRqErr) begin
             WrRqValid_Nxt =  0;
@@ -435,6 +441,7 @@ always_comb begin : proc_IB_Ptr
             WrRqData_Nxt  = '0;
 
             CtlIbSt_Nxt   = IDLE;
+            ObRdDone      = 1;
 
             if (ObPtrFn[15:12] == `MAX_OB) begin
                ObPtrFn_Nxt = `INIT_OB_REGION;
@@ -443,6 +450,9 @@ always_comb begin : proc_IB_Ptr
                ObPtrFn_Nxt[11:0]  = '0;
             end
          end else begin
+            CtlIbSt_Nxt = CtlIbSt;
+            ObRdDone    = 0;
+
             WrRqValid_Nxt = 1;
             WrRqAddr_Nxt  = `FINAL_OB_REGION;
             if (ObPtrFn[15:12] == `MAX_OB) begin
@@ -485,6 +495,23 @@ ram m_ram_Ob_0 (
    .RdAddr ( ObAddrOut ) ,
    .RdData ( ObDataOut )
 );
+
+
+IbObRamCtlr m_IbObRamCtlr(
+   .clk         ( clk         ) ,
+   .rst_n       ( rst_n       ) ,
+
+   .IbWrDone    ( IbWrDone    ) ,
+   .IbDataValid ( IbDataValid ) ,
+   .IbRamValid  ( IbRamValid  ) ,
+
+   .ObRdDone    ( ObRdDone    ) ,
+   .ObDataValid ( ObDataValid ) ,
+   .ObRamValid  ( ObRamValid  ) 
+) ;
+
+
+
 
 
 

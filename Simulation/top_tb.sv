@@ -39,13 +39,13 @@ top_gcm_aes_128 m_crypto (
    .ibDataValid    ( IbDataValid ),
    .ibSRAMValid    ( IbRamValid  ),
    .ib_rd_data     ( IbDataOut   ),
-   .ib_rd_addr     ( IbAddrOut   ),
+   .ib_rd_addr     ( IbAddrOut[7:0]   ),
    .ib_rd_en       ( IbRdEn      ),
 
    .obSRAMValid    ( ObRamValid  ),
    .obDataValid    ( ObDataValid ),
    .ob_wr_en       ( ObWrEn      ),
-   .ob_wr_addr     ( ObAddrIn    ),
+   .ob_wr_addr     ( ObAddrIn[7:0]    ),
    .ob_wr_data     ( ObDataIn    )
 );
 
@@ -91,14 +91,16 @@ pcie_sub_ctlr #(
 
 initial begin
 
+   #(10*T);
+
    wait(RdRqValid == 1 && clk === 0) ;
    #(T*2);
    RdRqReady = 1;
    RdRqData  = 128'h2000;
    wait(clk === 0);
 
-   #(T*2);
-   RdRqData = 0;
+   #(T*1);
+   RdRqData = 'h10856;
    repeat(30) begin
       wait(m_pcie_sub_ctlr.CtlIbSt == m_pcie_sub_ctlr.WRT_FIFO);
       wait(clk === 0);
@@ -118,12 +120,19 @@ initial begin
    wait(IbDataValid === 1);
    wait(clk === 0);
 
-   for (int i=0; i<200; ++i) begin
+   foreach(m_pcie_sub_ctlr.m_ram_Ob_0.mem[i]) begin
       m_pcie_sub_ctlr.m_ram_Ob_0.mem[i] = i*2;
    end
 
-   // #(3*T);
-   // IbRamValid = 1; ObDataValid = 1;
+   wait(m_pcie_sub_ctlr.CtlIbSt == m_pcie_sub_ctlr.WRT_DATA);
+   wait(clk == 0);
+   #(T*2);
+
+   WrRqReady = 1;
+
+   wait(m_pcie_sub_ctlr.CtlIbSt == m_pcie_sub_ctlr.LOAD_PTR);
+   wait(clk == 0);
+   RdRqData = 'h02000;
 
 
 
@@ -148,8 +157,9 @@ initial begin
    WrRqReady = 0;
    WrRqErr = 0;
 
-   IbRamValid = 0; ObDataValid = 0;
-   
+   IbAddrOut[31:8] = 0;
+   ObAddrIn[31:8] = 0;
+  
 
 
    #(T*10);

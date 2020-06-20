@@ -1,3 +1,4 @@
+`timescale 10ns/1ns
 module ram (
    input             WrEn ,
    input  [31:0]     WrAddr ,
@@ -6,12 +7,20 @@ module ram (
    input  [31:0]     RdAddr ,
    output logic [127:0]   RdData ,
 
-   input             clk ,
-   input             rst_n  
+   input             clk/* ,
+   input             rst_n*/
 ) ;
 
-
 logic [127:0][31:0] mem;
+
+
+logic rst_n;
+
+initial begin
+   rst_n = 0;
+   #10ns;
+   rst_n = 1;
+end
 
 
 always_ff @(posedge clk or negedge rst_n) begin : proc_
@@ -22,9 +31,9 @@ always_ff @(posedge clk or negedge rst_n) begin : proc_
       if (WrEn) begin
          mem[WrAddr] <= WrData;
       end
-      if (RdEn) begin
-         RdData      <= mem[RdAddr];
-      end
+      // if (RdEn) begin
+      RdData      <= mem[RdAddr];
+      // end
    end
 end
 
