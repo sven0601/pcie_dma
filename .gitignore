@@ -1,4 +1,5 @@
 Synthesis/
+Simulation/
 
-!*.sv
-!*.svh
+!**.sv
+!**.svh
