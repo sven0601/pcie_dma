@@ -81,8 +81,6 @@ logic             WrRqValid_Nxt ;
 logic  [63:0]     WrRqAddr_Nxt ;
 logic  [127:0]    WrRqData_Nxt ;
 
-// logic             IbDataValidNxt ;
-
 logic [127:0]     IbDataNxt;
 logic [31:0]      IbAddrNxt;
 logic             IbWrEnNxt;
@@ -97,8 +95,6 @@ wire [127:0]      ObDataOut;
 
 logic             RdRqValid_Nxt;
 logic [63:0]      RdRqAddr_Nxt;
-
-// logic             ObRamValid_Nxt;
 
 logic             IbWrDone, ObRdDone;
 
@@ -139,8 +135,6 @@ always_ff @(posedge clk) begin : proc_CtlIbSt
       IbAddr      <= '0;
       IbWrEn      <= '0;
 
-      // IbDataValid <= 0;
-
       ObRdEn      <= '0;
       ObAddrOut   <= '0;
 
@@ -163,9 +157,6 @@ always_ff @(posedge clk) begin : proc_CtlIbSt
       IbData      <= IbDataNxt ;
       IbAddr      <= IbAddrNxt;
       IbWrEn      <= IbWrEnNxt ;
-
-      // IbDataValid <= IbDataValidNxt;
-      // ObRamValid  <= ObRamValid_Nxt;
 
       ObRdEn      <= ObRdEn_Nxt;
       ObAddrOut   <= ObAddrOut_Nxt;
@@ -197,10 +188,6 @@ always_comb begin : proc_IB_Ptr
    IbWrEnNxt      = 0;
    IbAddrNxt      = IbAddr;
    IbDataNxt      = IbData;
-
-   // IbDataValidNxt = 0;
-
-   // ObRamValid_Nxt = 1;
 
    IbWrDone = 0;
    ObRdDone = 0;
@@ -294,21 +281,7 @@ always_comb begin : proc_IB_Ptr
                IbPtrNxt_Nxt[15:12] = IbPtrNxt[15:12] + 4'h1;
                IbPtrNxt_Nxt[11:0]  = '0;
             end
-         end
-         /*else if (WrRqReady  & WrRqErr) begin
-            CtlIbSt_Nxt = UPDATE_PTR;
-
-            WrRqValid_Nxt = 1;
-            WrRqAddr_Nxt  = `NEXT_IB_REGION;
-
-            IbPtrNxt_Nxt = IbPtrNxt ;
-
-            if (IbPtrNxt[15:12] == 8'h7) begin
-               WrRqData_Nxt[15:12] = 8'h0;
-            end else begin
-               WrRqData_Nxt[15:12] = IbPtrNxt[15:12] + 8'h1;
-            end
-         end */else begin
+         end else begin
             CtlIbSt_Nxt = UPDATE_PTR;
 
             WrRqValid_Nxt = 1;
@@ -326,21 +299,15 @@ always_comb begin : proc_IB_Ptr
          if (ObDataValid) begin
             CtlIbSt_Nxt = CHK_PTR;
 
-            // IbDataValidNxt = 0;
-
             RdRqValid_Nxt = 1;
             RdRqAddr_Nxt  = `NEXT_OB_REGION;
 
-            // ObRamValid_Nxt = 0;
          end else begin
             RdRqValid_Nxt  = 0;
 
-            // IbDataValidNxt = 1;
-            // ObRamValid_Nxt = 1;
          end
       end
       WAIT_WR_PTR: begin
-         // ObRamValid_Nxt = 0;
 
          if (Cntr == `CNTR_MAX  ) begin
             CtlIbSt_Nxt = CHK_PTR;
@@ -359,7 +326,6 @@ always_comb begin : proc_IB_Ptr
          end
       end
       CHK_PTR: begin
-         // ObRamValid_Nxt = 0;
 
          if (RdRqReady & ~RdRqErr) begin
             RdRqValid_Nxt = 0;
@@ -388,7 +354,6 @@ always_comb begin : proc_IB_Ptr
          end
       end
       INI_WR_DATA: begin
-         // ObRamValid_Nxt = 0;
 
          WrRqValid_Nxt  = 0;
          WrRqData_Nxt   = ObDataOut;
@@ -401,7 +366,6 @@ always_comb begin : proc_IB_Ptr
          ObAddrOut_Nxt  = ObAddrOut + 32'h1;
       end
       WRT_DATA: begin
-         // ObRamValid_Nxt = 0;
 
          if (WrRqReady & ~WrRqErr) begin
             if (ObAddrOut == 'h64) begin // 100
@@ -433,7 +397,6 @@ always_comb begin : proc_IB_Ptr
          end
       end
       WRT_DTPTR: begin
-         // ObRamValid_Nxt = 0;
 
          if (WrRqReady & ~WrRqErr) begin
             WrRqValid_Nxt =  0;
@@ -509,11 +472,6 @@ IbObRamCtlr m_IbObRamCtlr(
    .ObDataValid ( ObDataValid ) ,
    .ObRamValid  ( ObRamValid  ) 
 ) ;
-
-
-
-
-
 
 endmodule : pcie_sub_ctlr
 
