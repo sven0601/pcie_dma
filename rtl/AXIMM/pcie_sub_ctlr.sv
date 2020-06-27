@@ -46,18 +46,17 @@ logic [31:0] ObPtrNxt, ObPtrNxt_Nxt ;
 
 
 `define INIT_IB_REGION  64'h0_1000
-`define NEXT_IB_REGION  64'h0
-`define FINAL_IB_REGION 64'h10
+`define NEXT_IB_RING    64'h0
+`define FINAL_IB_RING   64'h10
 `define MAX_IB          'h7
 
 `define INIT_OB_REGION  64'h1_1000
-`define NEXT_OB_REGION  64'h20
-`define FINAL_OB_REGION 64'h30
+`define NEXT_OB_RING    64'h20
+`define FINAL_OB_RING   64'h30
 `define MAX_OB          'h8
 
 /*{COUNTER_LEN{1'b1}}*/
 `define CNTR_MAX          'h20
-
 
 typedef enum logic[10:0] {
    IDLE        = 'h000,
@@ -74,7 +73,6 @@ typedef enum logic[10:0] {
    INI_WR_DATA = 'h100
 } CtlIbState ;
 
-
 CtlIbState CtlIbSt, CtlIbSt_Nxt ;
 
 logic             WrRqValid_Nxt ;
@@ -85,7 +83,7 @@ logic [127:0]     IbDataNxt;
 logic [31:0]      IbAddrNxt;
 logic             IbWrEnNxt;
 
-logic [128-1:0]   IbData  ;
+logic [127:0]     IbData  ;
 logic [31:0]      IbAddr  ;
 logic             IbWrEn  ;
 
@@ -198,7 +196,7 @@ always_comb begin : proc_IB_Ptr
             CtlIbSt_Nxt = LOAD_PTR;
 
             RdRqValid_Nxt = 1;
-            RdRqAddr_Nxt  = `FINAL_IB_REGION;
+            RdRqAddr_Nxt  = `FINAL_IB_RING;
          end
       end
       LOAD_PTR: begin
@@ -225,7 +223,7 @@ always_comb begin : proc_IB_Ptr
             CtlIbSt_Nxt = LOAD_PTR;
 
             RdRqValid_Nxt = 1;
-            RdRqAddr_Nxt  = `FINAL_IB_REGION;
+            RdRqAddr_Nxt  = `FINAL_IB_RING;
          end /*else begin
             CtlIbSt_Nxt = CtlIbSt ;
          end*/
@@ -242,10 +240,10 @@ always_comb begin : proc_IB_Ptr
 
                //
                WrRqValid_Nxt = 1;
-               WrRqAddr_Nxt  = `NEXT_IB_REGION;
+               WrRqAddr_Nxt  = `NEXT_IB_RING;
 
                if (IbPtrNxt[15:12] == 4'h7) begin
-                  WrRqData_Nxt[15:12] = 4'h0;
+                  WrRqData_Nxt[15:12] = `INIT_IB_REGION;
                end else begin
                   WrRqData_Nxt[15:12] = IbPtrNxt[15:12] + 4'h1;
                end
@@ -257,7 +255,7 @@ always_comb begin : proc_IB_Ptr
                IbWrDone    = 0;
 
                RdRqValid_Nxt = 1;
-               RdRqAddr_Nxt  = IbPtrNxt + 64'h10;
+               RdRqAddr_Nxt  = RdRqAddr + 64'h10;
             end
          end else begin
             CtlIbSt_Nxt = WRT_FIFO;
@@ -267,7 +265,7 @@ always_comb begin : proc_IB_Ptr
             IbWrEnNxt = 0;
 
             RdRqValid_Nxt = 1;
-            RdRqAddr_Nxt  = IbPtrNxt ;
+            RdRqAddr_Nxt  = RdRqAddr ;
          end
       end
       UPDATE_PTR : begin
@@ -285,14 +283,15 @@ always_comb begin : proc_IB_Ptr
             CtlIbSt_Nxt = UPDATE_PTR;
 
             WrRqValid_Nxt = 1;
-            WrRqAddr_Nxt  = `NEXT_IB_REGION;
+            WrRqAddr_Nxt  = `NEXT_IB_RING;
+            WrRqData_Nxt  = WrRqData ;
 
-            IbPtrNxt_Nxt = IbPtrNxt ;
-            if (IbPtrNxt[15:12] == 4'h7) begin
-               WrRqData_Nxt[15:12] = 4'h0;
-            end else begin
-               WrRqData_Nxt[15:12] = IbPtrNxt[15:12] + 4'h1;
-            end
+            IbPtrNxt_Nxt  = IbPtrNxt ;
+            // if (IbPtrNxt[15:12] == 4'h7) begin
+            //    WrRqData_Nxt[15:12] = 4'h0;
+            // end else begin
+            //    WrRqData_Nxt[15:12] = IbPtrNxt[15:12] + 4'h1;
+            // end
          end
       end
       WAIT_DONE: begin
@@ -300,7 +299,7 @@ always_comb begin : proc_IB_Ptr
             CtlIbSt_Nxt = CHK_PTR;
 
             RdRqValid_Nxt = 1;
-            RdRqAddr_Nxt  = `NEXT_OB_REGION;
+            RdRqAddr_Nxt  = `NEXT_OB_RING;
 
          end else begin
             RdRqValid_Nxt  = 0;
@@ -308,12 +307,11 @@ always_comb begin : proc_IB_Ptr
          end
       end
       WAIT_WR_PTR: begin
-
          if (Cntr == `CNTR_MAX  ) begin
             CtlIbSt_Nxt = CHK_PTR;
 
             RdRqValid_Nxt = 1;
-            RdRqAddr_Nxt  = `NEXT_OB_REGION;
+            RdRqAddr_Nxt  = `NEXT_OB_RING;
 
             ObRdEn_Nxt = 1;
             ObAddrOut_Nxt = 0;
@@ -329,7 +327,7 @@ always_comb begin : proc_IB_Ptr
 
          if (RdRqReady & ~RdRqErr) begin
             RdRqValid_Nxt = 0;
-            RdRqAddr_Nxt  = '0;
+            RdRqAddr_Nxt  = `NEXT_OB_RING;
 
             if (RdRqData[15:12] == 4'h0 && ObPtrFn[15:12] == `MAX_OB || 
                   ObPtrFn[15:12] + 4'h1 == RdRqData[15:12]
@@ -347,7 +345,7 @@ always_comb begin : proc_IB_Ptr
 
          end else begin
             RdRqValid_Nxt = 1;
-            RdRqAddr_Nxt  = `NEXT_OB_REGION;
+            RdRqAddr_Nxt  = `NEXT_OB_RING;
 
             ObRdEn_Nxt = 0;
             ObAddrOut_Nxt = 0;
@@ -366,7 +364,7 @@ always_comb begin : proc_IB_Ptr
          ObAddrOut_Nxt  = ObAddrOut + 32'h1;
       end
       WRT_DATA: begin
-
+         WrRqData_Nxt = ObDataOut;
          if (WrRqReady & ~WrRqErr) begin
             if (ObAddrOut == 'h64) begin // 100
                CtlIbSt_Nxt   = WRT_DTPTR;
@@ -375,11 +373,12 @@ always_comb begin : proc_IB_Ptr
                ObAddrOut_Nxt = 0;
 
                WrRqValid_Nxt = 1;
-               WrRqAddr_Nxt  = `FINAL_OB_REGION;
+               WrRqAddr_Nxt  = `FINAL_OB_RING;
                if (ObPtrFn[15:12] == `MAX_OB) begin
-                  WrRqData_Nxt = '0;
+                  WrRqData_Nxt = `INIT_OB_REGION;
                end else begin
                   WrRqData_Nxt[15:12] = ObPtrFn[15:12] + 4'h1;
+                  WrRqData_Nxt[11:0]  = '0;
                end
             end else begin
                ObRdEn_Nxt    = 1;
@@ -393,7 +392,7 @@ always_comb begin : proc_IB_Ptr
             ObAddrOut_Nxt = ObAddrOut;
             WrRqValid_Nxt = 1;
             WrRqAddr_Nxt  = WrRqAddr;
-            WrRqData_Nxt  = WrRqData;
+            WrRqData_Nxt  = ObDataOut;
          end
       end
       WRT_DTPTR: begin
@@ -417,7 +416,7 @@ always_comb begin : proc_IB_Ptr
             ObRdDone    = 0;
 
             WrRqValid_Nxt = 1;
-            WrRqAddr_Nxt  = `FINAL_OB_REGION;
+            WrRqAddr_Nxt  = `FINAL_OB_RING;
             if (ObPtrFn[15:12] == `MAX_OB) begin
                WrRqData_Nxt = '0;
             end else begin
@@ -474,5 +473,3 @@ IbObRamCtlr m_IbObRamCtlr(
 ) ;
 
 endmodule : pcie_sub_ctlr
-
-
